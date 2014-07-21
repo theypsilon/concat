@@ -162,25 +162,38 @@ namespace theypsilon {
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>::value && !is_stream<T>::value, T>::type* = nullptr>
+                typename std::enable_if<!is_container<T>::value && !is_stream<T>::value && is_char_sequence<T>::value, T>::type* = nullptr>
+            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
+                if (v) writter << v;
+            }
+
+            template <typename W, typename S, typename T,
+                typename std::enable_if<!is_container<T>::value && !is_stream<T>::value && is_char_sequence<T>::value, T>::type* = nullptr>
+            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T* v) {
+                if (v) writter << v;
+            }
+
+            template <typename W, typename S, typename T,
+                typename std::enable_if<!is_container<T>::value && !is_stream<T>::value && !is_char_sequence<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
                 writter << v;
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>::value && is_stream<T>::value, T>::type* = nullptr>
+                typename std::enable_if<!is_container<T>::value && is_stream<T>::value && !is_char_sequence<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
-                writter << v.str();
+                if (v) writter << v.str();
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<is_container<T>::value, T>::type* = nullptr>
+                typename std::enable_if<is_container<T>::value && !is_stream<T>::value && !is_char_sequence<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>&, const T& container) {
                 std::deque<bool> b;
                 for (const auto& element: container)
                     must_write(b, element);
-                for (const auto& element: container)
+                for (const auto& element: container) {
                     do_base_write(writter, separator, b, element);
+                }
             }
 
             template <typename W, typename S, typename T, typename... Args>
@@ -194,11 +207,10 @@ namespace theypsilon {
                 pre_write(writter, separator, b, v);
                 bool must = b.front();
                 b.pop_front();
-                if (must && any_writable(b)) {
+                if (must) {
                     do_write(writter, separator, b, v);
-                    writter << separator;        
+                    if (any_writable(b)) writter << separator;
                 }
-                
             }
 
             template <typename S, typename T, typename... Args,
