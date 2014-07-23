@@ -80,7 +80,7 @@ namespace concatns {
                     has_begin_end<T>::beg_value  && 
                     has_begin_end<T>::end_value  &&
                     !std::is_same<T, std::string>::value &&
-                    !is_stream<T>());
+                    !is_stream<T>()) || std::is_array<T>::value;
         }
 
         template<typename T> 
