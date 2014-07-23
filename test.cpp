@@ -93,13 +93,12 @@ TEST_CASE( "Container types, text identities and separators", "[concat]" ) {
 
 TEST_CASE( "Stream types, as host", "[concat]" ) {
 	std::string temp;
-	std::ostringstream s1, s2;
+	std::ostringstream s1;
 	s1 << "hello";
-	s2 << "world!";
-	temp = concat<' '>(s1, s2);
+	temp = concat<' '>(s1, "world!");
 	REQUIRE( temp == s1.str() );
 	REQUIRE( temp == "helloworld!");
-	REQUIRE( concat(s1, 1,2,3, s1, s1) == "helloworld!123helloworld!123helloworld!123helloworld!123");
+	REQUIRE( concat(s1, 1,2,3) == "helloworld!123");
 }
 
 TEST_CASE( "Stream types, as guest", "[concat]" ) {
@@ -111,6 +110,17 @@ TEST_CASE( "Stream types, as guest", "[concat]" ) {
 	REQUIRE( temp     != s1.str() );
 	REQUIRE( temp     == "hello world!");
 	REQUIRE( s1.str() == "hello");
+}
+
+TEST_CASE( "Stream types, as host and guest", "[concat]" ) {
+	std::string temp;
+	std::ostringstream s1, s2;
+	s1 << "hello";
+	s2 << "world!";
+	temp = concat<' '>(s1, s2);
+	REQUIRE( temp == s1.str() );
+	REQUIRE( temp == "helloworld!");
+	REQUIRE( concat(s1, 1,2,3, s1, s1) == "helloworld!123helloworld!123helloworld!123helloworld!123");
 }
 
 TEST_CASE( "Stream types, mixed guest and host", "[concat]" ) {
@@ -145,6 +155,6 @@ TEST_CASE( "Modifiers, mixed", "[concat]" ) {
 }
 
 TEST_CASE( "UTF text types, identity", "[concat]" ) {
-//	REQUIRE( concat(std::wstring()) == "");
+	REQUIRE( concat(std::wstring()) == "");
 //	REQUIRE( concat(u"This is a Unicode Character: \u2018.") == "" );
 }
