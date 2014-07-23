@@ -1,3 +1,12 @@
+/*
+ *  CONCAT 
+ *  Version: 2014-23-07
+ *  ----------------------------------------------------------
+ *  Copyright (c) 2014 José Manuel Barroso Galindo. All rights reserved.
+ *
+ *  Distributed under the Boost Software License, Version 1.0. (See accompanying
+ *  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ */
 #ifndef THEYPSILON_CONCAT
 #define THEYPSILON_CONCAT
 
