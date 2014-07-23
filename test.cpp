@@ -159,7 +159,7 @@ TEST_CASE( "Modifiers, mixed", "modifiers" ) {
 	REQUIRE( concat<' '>(std::setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
 }
 
-TEST_CASE( "UTF text types, identity", "utf_id" ) {
+TEST_CASE( "UTF types, identity", "utf_id" ) {
 	REQUIRE( concat<wchar_t >(L"wstring") == L"wstring" );
 	REQUIRE( concat<char16_t>(u"unicode") == u"unicode" );
 	REQUIRE( concat<char32_t>(U"Unicode") == U"Unicode" );
@@ -169,7 +169,7 @@ TEST_CASE( "UTF text types, identity", "utf_id" ) {
 	REQUIRE( concat<char32_t>(separator(U""), U"Unicode") == U"Unicode" );
 }
 
-TEST_CASE( "UTF text types, basic concat", "utf_c" ) {
+TEST_CASE( "UTF types, basic concat", "utf_c" ) {
 	REQUIRE( concat<wchar_t >(L"This is", L"wstring") == L"This iswstring" );
 	REQUIRE( concat<char16_t>(u"This is", u"unicode") == u"This isunicode" );
 	REQUIRE( concat<char32_t>(U"This is", U"Unicode") == U"This isUnicode" );
