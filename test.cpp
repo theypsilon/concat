@@ -9,10 +9,10 @@
 #include <map>
 #include <unordered_map>
 
-using namespace concat;
+using namespace concatns;
 using namespace std;
 
-TEST_CASE( "Basic types, identity", "[concat]" ) {
+TEST_CASE( "Basic types, identity", "basic_id" ) {
 	REQUIRE( concat(1)   == "1");
 	REQUIRE( concat(1.0) == "1");
 	REQUIRE( concat('a') == "a");
@@ -21,7 +21,7 @@ TEST_CASE( "Basic types, identity", "[concat]" ) {
 	REQUIRE( concat(true) == "1");
 }
 
-TEST_CASE( "Basic types, basic concat", "[concat]" ) {
+TEST_CASE( "Basic types, basic concat", "basic_c" ) {
 	REQUIRE( concat(1,2,3,4,5) == "12345" );
 	REQUIRE( concat("1","2","3","4","5") == "12345" );
 	REQUIRE( concat('1','2','3','4','5') == "12345" );
@@ -33,7 +33,7 @@ TEST_CASE( "Basic types, basic concat", "[concat]" ) {
 }
 
 
-TEST_CASE( "Basic types, separators", "[concat]" ) {
+TEST_CASE( "Basic types, separators", "basic_s" ) {
 	REQUIRE( concat(separator(", "),1,2,3,4,5)  == "1, 2, 3, 4, 5" );
 	REQUIRE((concat<',', ' '>(1,2,3,4,5))       == "1, 2, 3, 4, 5" );
 	REQUIRE( concat<','>(1,2,3,4,5)             == "1,2,3,4,5" );
@@ -42,13 +42,13 @@ TEST_CASE( "Basic types, separators", "[concat]" ) {
 	REQUIRE( concat<' '>("Hello", "World!")     == "Hello World!" );
 }
 
-TEST_CASE( "Basic types, mixed", "[concat]" ) {
+TEST_CASE( "Basic types, mixed", "basic_m" ) {
 	REQUIRE( concat(1,"2",3,"4",5,"6") == "123456" );
 	REQUIRE( concat("1",2,"3",4,"5",6) == "123456" );
 	REQUIRE( concat("a",2,3.0,'f')     == "a23f" );
 }
 
-TEST_CASE( "Pointer types, identity", "[concat]" ) {
+TEST_CASE( "Pointer types, identity", "pointer_id" ) {
 	std::string temp;
 	REQUIRE( concat(static_cast<const char *>(nullptr)) == "");
 	REQUIRE( concat(static_cast<std::string*>(nullptr)) == "0");
@@ -56,13 +56,18 @@ TEST_CASE( "Pointer types, identity", "[concat]" ) {
 	REQUIRE( concat(static_cast<const void *>(nullptr)) == "0");
 }
 
-TEST_CASE( "Container types, identity", "[concat]" ) {
+TEST_CASE( "Container types, identity", "container_id" ) {
 	REQUIRE( concat(std::vector<int>{1,2,3,4,5}) == "12345" );
 	REQUIRE( concat(std::list<int>{1,2,3,4,5}) == "12345" );
 	REQUIRE( concat(std::set<int>{1,2,3,4,5}) == "12345" );
 }
 
-TEST_CASE( "Container types, mixed", "[concat]" ) {
+TEST_CASE( "Array types, identity", "array" ) {
+	int a[] = {1,2,3,4,5};
+	REQUIRE( concat(a) == "12345" );
+}
+
+TEST_CASE( "Container types, mixed", "container_m" ) {
 	std::vector<int> v = {1,2,3,4,5};
 
 	REQUIRE( concat(1,2,3,4,5,v) == "1234512345" );
@@ -77,7 +82,7 @@ TEST_CASE( "Container types, mixed", "[concat]" ) {
 	REQUIRE( concat(v,"something") == "12345something" );
 }
 
-TEST_CASE( "Container types, text identities and separators", "[concat]" ) {
+TEST_CASE( "Container types, text identities and separators", "container_s" ) {
 	std::vector<std::string> s = {"hello"," ","world","!"};
 	REQUIRE( concat(s)      == "hello world!" );
 	REQUIRE( concat<' '>(s) == "hello   world !" );
@@ -91,7 +96,7 @@ TEST_CASE( "Container types, text identities and separators", "[concat]" ) {
 	REQUIRE( concat<' '>(ch) == "a b c" );
 }
 
-TEST_CASE( "Stream types, as host", "[concat]" ) {
+TEST_CASE( "Stream types, as host", "stream_host" ) {
 	std::string temp;
 	std::ostringstream s1;
 	s1 << "hello";
@@ -101,7 +106,7 @@ TEST_CASE( "Stream types, as host", "[concat]" ) {
 	REQUIRE( concat(s1, 1,2,3) == "helloworld!123");
 }
 
-TEST_CASE( "Stream types, as guest", "[concat]" ) {
+TEST_CASE( "Stream types, as guest", "stream_guest" ) {
 	std::string temp;
 	std::ostringstream s1, s2;
 	s1 << "hello";
@@ -112,7 +117,7 @@ TEST_CASE( "Stream types, as guest", "[concat]" ) {
 	REQUIRE( s1.str() == "hello");
 }
 
-TEST_CASE( "Stream types, as host and guest", "[concat]" ) {
+TEST_CASE( "Stream types, as host and guest", "stream_hg" ) {
 	std::string temp;
 	std::ostringstream s1, s2;
 	s1 << "hello";
@@ -123,7 +128,7 @@ TEST_CASE( "Stream types, as host and guest", "[concat]" ) {
 	REQUIRE( concat(s1, 1,2,3, s1, s1) == "helloworld!123helloworld!123helloworld!123helloworld!123");
 }
 
-TEST_CASE( "Stream types, mixed guest and host", "[concat]" ) {
+TEST_CASE( "Stream types, mixed guest and host", "stream_m" ) {
 	std::vector<std::string> s = {"hello"," ","world","!"};
 	REQUIRE( concat(s)      == "hello world!" );
 	REQUIRE( concat<' '>(s) == "hello   world !" );
@@ -143,18 +148,18 @@ TEST_CASE( "Stream types, mixed guest and host", "[concat]" ) {
 	REQUIRE( s1.str()                            == "hellohello world!hello world!abcworld!amazing");
 }
 
-TEST_CASE( "Null text types, mixed", "[concat]" ) {
+TEST_CASE( "Null text types, mixed", "nulltext" ) {
 	const char* msg = nullptr;
 	REQUIRE( concat<' '>(msg) == "");
 	REQUIRE( concat<' '>("this is my message: ") == "this is my message: ");
 	REQUIRE( concat("this is my message: ", msg) == "this is my message: ");
 }
 
-TEST_CASE( "Modifiers, mixed", "[concat]" ) {
+TEST_CASE( "Modifiers, mixed", "modifiers" ) {
 	REQUIRE( concat<' '>(std::setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
 }
 
-TEST_CASE( "UTF text types, identity", "[concat]" ) {
+TEST_CASE( "UTF text types, identity", "utf" ) {
 	REQUIRE( concat(std::wstring()) == "");
 //	REQUIRE( concat(u"This is a Unicode Character: \u2018.") == "" );
 }

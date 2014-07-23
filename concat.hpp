@@ -13,7 +13,7 @@
 #include <sstream>
 #include <deque>
 
-namespace concat {
+namespace concatns {
 
     struct separator {
         const char* sep;
@@ -76,11 +76,11 @@ namespace concat {
 
         template<typename T> 
         constexpr bool is_container() {
-            return  has_const_iterator<T>::value && 
+            return (has_const_iterator<T>::value && 
                     has_begin_end<T>::beg_value  && 
                     has_begin_end<T>::end_value  &&
                     !std::is_same<T, std::string>::value &&
-                    !is_stream<T>();
+                    !is_stream<T>());
         }
 
         template<typename T> 
@@ -106,7 +106,7 @@ namespace concat {
 
         template <typename T>
         constexpr bool is_modifier() {
-            return !is_container<T>() && !can_be_false<T>() && !is_basic_type<T>();
+            return !is_container<T>() && !can_be_false<T>() && !is_basic_type<T>() && !std::is_array<T>::value;
         }
     }
 
@@ -168,31 +168,31 @@ namespace concat {
             void do_base_write(W& writter, const S& separator, std::deque<bool>& b, const T& v);
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>() && !is_stream<T>() && is_char_sequence<T>(), T>::type* = nullptr>
+                typename std::enable_if<!is_container<T>() && !is_stream<T>() && is_char_sequence<T>() && !std::is_array<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
                 if (v) writter << v;
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>() && !is_stream<T>() && is_char_sequence<T>(), T>::type* = nullptr>
+                typename std::enable_if<!is_container<T>() && !is_stream<T>() && is_char_sequence<T>() && !std::is_array<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T* v) {
                 if (v) writter << v;
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<(!is_container<T>() && !is_stream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
+                typename std::enable_if<(!is_container<T>() && !is_stream<T>() && !is_char_sequence<T>() && !std::is_array<T>::value) || is_modifier<T>(), T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
                 writter << v;
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>() && is_stream<T>() && !is_char_sequence<T>(), T>::type* = nullptr>
+                typename std::enable_if<!is_container<T>() && is_stream<T>() && !is_char_sequence<T>() && !std::is_array<T>::value, T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
                 if (v) writter << concat_to_string(v);
             }
 
             template <typename W, typename S, typename T,
-                typename std::enable_if<is_container<T>() && !is_stream<T>() && !is_char_sequence<T>(), T>::type* = nullptr>
+                typename std::enable_if<(is_container<T>() || std::is_array<T>::value) && !is_stream<T>() && !is_char_sequence<T>(), T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>&, const T& container) {
                 std::deque<bool> b;
                 for (const auto& element: container)
