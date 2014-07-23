@@ -4,7 +4,7 @@
 #include <sstream>
 #include <deque>
 
-namespace theypsilon {
+namespace concat {
 
     struct separator {
         const char* sep;

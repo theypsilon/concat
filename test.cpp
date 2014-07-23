@@ -9,7 +9,7 @@
 #include <map>
 #include <unordered_map>
 
-using namespace theypsilon;
+using namespace concat;
 using namespace std;
 
 TEST_CASE( "Basic types, identity", "[concat]" ) {
