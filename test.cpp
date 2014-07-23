@@ -9,7 +9,7 @@
 #include <map>
 #include <unordered_map>
 
-using namespace concatns;
+using namespace $;
 using namespace std;
 
 TEST_CASE( "Basic types, identity", "basic_id" ) {
@@ -38,7 +38,7 @@ TEST_CASE( "Basic types, separators", "basic_s" ) {
 	REQUIRE((concat<',', ' '>(1,2,3,4,5))       == "1, 2, 3, 4, 5" );
 	REQUIRE( concat<','>(1,2,3,4,5)             == "1,2,3,4,5" );
 	REQUIRE( concat<endl>(1,2,3,4,5)            == "1\n2\n3\n4\n5" );
-	REQUIRE( concat<separator::plus>(1,2,3,4,5) == "1 + 2 + 3 + 4 + 5" );
+	REQUIRE( concat<sep::plus>(1,2,3,4,5)       == "1 + 2 + 3 + 4 + 5" );
 	REQUIRE( concat<' '>("Hello", "World!")     == "Hello World!" );
 }
 
@@ -159,7 +159,22 @@ TEST_CASE( "Modifiers, mixed", "modifiers" ) {
 	REQUIRE( concat<' '>(std::setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
 }
 
-TEST_CASE( "UTF text types, identity", "utf" ) {
-	REQUIRE( concat(std::wstring()) == "");
-//	REQUIRE( concat(u"This is a Unicode Character: \u2018.") == "" );
+TEST_CASE( "UTF text types, identity", "utf_id" ) {
+	REQUIRE( concat<wchar_t >(L"wstring") == L"wstring" );
+	REQUIRE( concat<char16_t>(u"unicode") == u"unicode" );
+	REQUIRE( concat<char32_t>(U"Unicode") == U"Unicode" );
+
+	REQUIRE( concat<wchar_t >(separator(L""), L"wstring") == L"wstring" );
+	REQUIRE( concat<char16_t>(separator(u""), u"unicode") == u"unicode" );
+	REQUIRE( concat<char32_t>(separator(U""), U"Unicode") == U"Unicode" );
+}
+
+TEST_CASE( "UTF text types, basic concat", "utf_c" ) {
+	REQUIRE( concat<wchar_t >(L"This is", L"wstring") == L"This iswstring" );
+	REQUIRE( concat<char16_t>(u"This is", u"unicode") == u"This isunicode" );
+	REQUIRE( concat<char32_t>(U"This is", U"Unicode") == U"This isUnicode" );
+
+	REQUIRE( concat<wchar_t >(separator(L" "), L"This is", L"wstring") == L"This is wstring" );
+	REQUIRE( concat<char16_t>(separator(u" "), u"This is", u"unicode") == u"This is unicode" );
+	REQUIRE( concat<char32_t>(separator(U" "), U"This is", U"Unicode") == U"This is Unicode" );
 }
