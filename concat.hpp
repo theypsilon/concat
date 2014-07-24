@@ -13,7 +13,8 @@
 #include <sstream>
 #include <deque>
 
-namespace $ {
+
+namespace theypsilon {
 
     template <typename CharT>
     struct separator_t {
@@ -350,7 +351,6 @@ namespace $ {
         typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
-    }
 
 }
 

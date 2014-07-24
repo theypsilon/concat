@@ -9,7 +9,7 @@
 #include <map>
 #include <unordered_map>
 
-using namespace $;
+using namespace theypsilon;
 using namespace std;
 
 TEST_CASE( "Basic types, identity", "basic_id" ) {
@@ -178,3 +178,20 @@ TEST_CASE( "UTF types, basic concat", "utf_c" ) {
 	REQUIRE( concat<char16_t>(separator(u" "), u"This is", u"unicode") == u"This is unicode" );
 	REQUIRE( concat<char32_t>(separator(U" "), U"This is", U"Unicode") == U"This is Unicode" );
 }
+
+/*
+TEST_CASE( "initializer typed list, identity", "init_t_id" ) {
+	auto&& 		a = {1,2,3,4,5};
+	const auto& b = {1,2,3,4,5};
+	auto 		c = {1,2,3,4,5};
+	REQUIRE( concat(a) == "12345" );
+	REQUIRE( concat(b) == "12345" );
+	REQUIRE( concat(c) == "12345" );
+	REQUIRE( concat(std::initializer_list<int>{1,2,3,4,5}) == "12345" );
+
+	using inplace = decltype(std::initializer_list<int>{1,2,3,4,5});
+	static_assert(std::is_same<decltype(a), std::initializer_list<int>&&>::value, "");
+	static_assert(std::is_same<decltype(b), const std::initializer_list<int>&>::value, "");
+	static_assert(std::is_same<decltype(c), std::initializer_list<int>>::value, "");
+	static_assert(std::is_same<inplace, std::initializer_list<int>>::value, "");
+}*/
