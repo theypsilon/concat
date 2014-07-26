@@ -162,7 +162,7 @@ namespace theypsilon {
 
         template <typename CharT, typename W>
         std::basic_string<CharT> concat_to_string(const W& writter) {
-            return writter ? writter.str() : std::basic_string<CharT>();
+            return writter.good() ? writter.str() : std::basic_string<CharT>();
         }
 
         bool any_writable(const std::deque<bool>& b) {
@@ -253,7 +253,8 @@ namespace theypsilon {
             template <typename CharT, typename W, typename S, typename T,
                 typename std::enable_if<is_stream<T>(), T>::type* = nullptr>
             void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
-                if (v) writter << concat_to_string<CharT>(v);
+                if (v.good()) writter << concat_to_string<CharT>(v);
+                else writter.setstate(v.rdstate());
             }
 
             template <typename CharT, typename W, typename S, typename T,
