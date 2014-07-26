@@ -11,7 +11,6 @@
 #define THEYPSILON_CONCAT
 
 #include <sstream>
-#include <deque>
 #include <tuple>
 
 namespace theypsilon {
