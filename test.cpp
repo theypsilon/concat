@@ -101,9 +101,9 @@ TEST_CASE( "Stream types, as host", "stream_host" ) {
 	std::ostringstream s1;
 	s1 << "hello";
 	temp = concat<' '>(s1, "world!");
-	CHECK( temp == s1.str() );
-	CHECK( temp == "helloworld!");
-	CHECK( concat(s1, 1,2,3) == "helloworld!123");
+	CHECK  ( temp == s1.str() );
+	REQUIRE( temp == "helloworld!");
+	CHECK  ( concat(s1, 1,2,3) == "helloworld!123");
 }
 
 TEST_CASE( "Stream types, as guest", "stream_guest" ) {
@@ -123,9 +123,9 @@ TEST_CASE( "Stream types, as host and guest", "stream_hg" ) {
 	s1 << "hello";
 	s2 << "world!";
 	temp = concat<' '>(s1, s2);
-	CHECK( temp == s1.str() );
-	CHECK( temp == "helloworld!");
-	CHECK( concat(s1, 1,2,3, s1, s1) == "helloworld!123helloworld!123helloworld!123helloworld!123");
+	CHECK  ( temp == s1.str() );
+	REQUIRE( temp == "helloworld!");
+	CHECK  ( concat(s1, 1,2,3, s1, s1) == "helloworld!123helloworld!123helloworld!123helloworld!123");
 }
 
 TEST_CASE( "Stream types, mixed guest and host", "stream_m" ) {
@@ -136,8 +136,8 @@ TEST_CASE( "Stream types, mixed guest and host", "stream_m" ) {
 	std::ostringstream s1, s2;
 	s1 << "hello";
 	s2 << "world!";
-	CHECK( concat(s1, s, c, h, s2, "amazing") == "hellohello world!hello world!abcworld!amazing");
-	CHECK( s1.str()                           == "hellohello world!hello world!abcworld!amazing");
+	REQUIRE( concat(s1, s, c, h, s2, "amazing") == "hellohello world!hello world!abcworld!amazing");
+	CHECK  ( s1.str()                           == "hellohello world!hello world!abcworld!amazing");
 }
 
 TEST_CASE( "Stream types, exception", "stream_exception" ) {
