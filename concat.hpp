@@ -165,117 +165,48 @@ namespace theypsilon {
             return writter.good() ? writter.str() : std::basic_string<CharT>();
         }
 
-        bool any_writable(const std::deque<bool>& b) {
-            for (bool e: b) if (e) return true;
-            return false;
-        }
-
         namespace {
-
-            template <typename T,
-                typename std::enable_if<!can_be_false<T>() && !is_container<T>(), T>::type* = nullptr>
-            void must_write(std::deque<bool>& b, const T& v) {
-                b.push_back(is_basic_type<T>());
-            }
-
-            template <typename T,
-                typename std::enable_if<can_be_false<T>(), T>::type* = nullptr>
-            void must_write(std::deque<bool>& b, const T& v) {
-                b.push_back(((bool)v) == true);
-            }
-
-            template <typename T,
-                typename std::enable_if<is_container<T>(), T>::type* = nullptr>
-            void must_write(std::deque<bool>& b, const T& container) {
-                for(const auto& element : container) {
-                    must_write(b, element);
-                    if (b.back())
-                        return b.push_back(true);
-                }
-                b.push_back(false);
-            }
-
-            template <typename... Args>
-            void must_write(std::deque<bool>& b, const std::tuple<Args...>& v);
-
-            template<unsigned N, unsigned Last>
-            struct tuple_checker {
-                template<typename T>
-                static void must(std::deque<bool>& b, const T& v) {
-                    must_write(b, std::get<N>(v));
-                    tuple_checker<N + 1, Last>::template must(b, v);
-                }
-            };
-
-            template<unsigned N>
-            struct tuple_checker<N, N> {
-                template<typename T>
-                static void must(std::deque<bool>& b, const T& v) {
-                    must_write(b, std::get<N>(v));
-                }
-            };
-
-            template <typename... Args>
-            void must_write(std::deque<bool>& b, const std::tuple<Args...>& v) {
-                std::deque<bool> check;
-                tuple_checker<0, sizeof...(Args) - 1>::template must(check, v);
-                b.push_back(any_writable(check));
-            }
-
-            template <typename T, typename... Args>
-            void must_write(std::deque<bool>& b, const T& head, const Args&... tail) {
-                must_write(b, head);
-                must_write(b, tail...);
-            }
-
-            template <typename... Args>
-            std::deque<bool> get_write_deque(const Args&... seq) {
-                std::deque<bool> b;
-                must_write(b, seq...);
-                return b;
-            }
-
             template <typename CharT, typename W, typename S, typename T>
-            void do_base_write(W& writter, const S& separator, std::deque<bool>& b, const T& v);
+            void concat_intern_write(W& writter, const S& separator, bool b, const T& v);
 
             template <typename CharT, typename W, typename S, typename T,
                 typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
-            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T* v) {
+            void concat_intern_recursion(W& writter, const S& separator, bool, const T* v) {
                 if (v) writter << v;
             }
 
             template <typename CharT, typename W, typename S, typename T,
                 typename std::enable_if<(!is_container<T>() && !is_stream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
-            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
+            void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
                 writter << v;
             }
 
             template <typename CharT, typename W, typename S, typename T,
                 typename std::enable_if<is_stream<T>(), T>::type* = nullptr>
-            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
+            void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
                 if (v.good()) writter << concat_to_string<CharT>(v);
                 else writter.setstate(v.rdstate());
             }
 
             template <typename CharT, typename W, typename S, typename T,
                 typename std::enable_if<is_container<T>(), T>::type* = nullptr>
-            void do_write(W& writter, const S& separator, std::deque<bool>&, const T& container) {
-                std::deque<bool> b;
-                for (const auto& element: container)
-                    must_write(b, element);
-                for (const auto& element: container) {
-                    do_base_write<CharT>(writter, separator, b, element);
+            void concat_intern_recursion(W& writter, const S& separator, bool, const T& container) {
+                auto it = std::begin(container), et = std::end(container);
+                while(it != et) {
+                    auto element = *it;
+                    it++;
+                    concat_intern_write<CharT>(writter, separator, it != et, element);
                 }
             }
 
             template <typename CharT, typename W, typename S, typename... Args>
-            void do_write(W& writter, const S& separator, std::deque<bool>& b, const std::tuple<Args...>& v);
+            void concat_intern_recursion(W& writter, const S& separator, bool, const std::tuple<Args...>& v);
 
             template<unsigned N, unsigned Last>
             struct tuple_printer {
                 template<typename CharT, typename W, typename S, typename T>
-                static void print(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
-                    do_base_write<CharT>(writter, separator, b, std::get<N>(v));
+                static void print(W& writter, const S& separator, bool b, const T& v) {
+                    concat_intern_write<CharT>(writter, separator, true, std::get<N>(v));
                     tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, b, v);
                 }
             };
@@ -283,97 +214,33 @@ namespace theypsilon {
             template<unsigned N>
             struct tuple_printer<N, N> {
                 template<typename CharT, typename W, typename S, typename T>
-                static void print(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
-                    do_base_write<CharT>(writter, separator, b, std::get<N>(v));
+                static void print(W& writter, const S& separator, bool, const T& v) {
+                    concat_intern_write<CharT>(writter, separator, false, std::get<N>(v));
                 }
             };
 
             template <typename CharT, typename W, typename S, typename... Args>
-            inline void do_write(W& writter, const S& separator, std::deque<bool>&, const std::tuple<Args...>& v) {
-                std::deque<bool> b;
-                tuple_checker<0, sizeof...(Args) - 1>::template must(b, v);
+            inline void concat_intern_recursion(W& writter, const S& separator, bool b, const std::tuple<Args...>& v) {
                 tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, b, v);
             }
 
             template <typename CharT, typename W, typename S, typename T, typename... Args>
-            void do_write(W& writter, const S& separator, std::deque<bool>& b, const T& head, const Args&... tail) {
-                do_base_write<CharT>(writter, separator, b, head);
-                do_write<CharT>(writter, separator, b, tail...);
+            void concat_intern_recursion(W& writter, const S& separator, bool, const T& head, const Args&... tail) {
+                concat_intern_write<CharT>(writter, separator, true, head);
+                concat_intern_recursion<CharT>(writter, separator, false, tail...);
             }
 
             template <typename CharT, typename W, typename S, typename T>
-            inline void do_base_write(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
-                if (is_modifier<T>())
-                    do_write<CharT>(writter, separator, b, v);
-                
-                bool must = b.front();
-                b.pop_front();
-                if (!must) return;
-                do_write<CharT>(writter, separator, b, v);
-                if (any_writable(b)) separate(writter, separator);
+            inline void concat_intern_write(W& writter, const S& separator, bool b, const T& v) {
+                concat_intern_recursion<CharT>(writter, separator, b, v);
+                if (b && !is_modifier<T>()) separate(writter, separator);
             }
 
             template <typename CharT, typename S, typename T, typename... Args,
                 typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type* = nullptr>
             std::basic_string<CharT> concat_intern(const S& separator, T& writter, const Args&... seq) {
-                auto b = get_write_deque(seq...);
-                do_write<CharT>(writter, separator, b, seq...);
+                concat_intern_recursion<CharT>(writter, separator, false, seq...);
                 return concat_to_string<CharT>(writter);
-            }
-        }
-
-        namespace unused {
-
-            template <typename W, typename S, typename T,
-                typename std::enable_if<!is_container<T>() && !is_stream<T>(), T>::type* = nullptr>
-            bool concat_intern_recursion(W& writter, const S& separator, const T& head) {
-                writter << head;
-                return std::is_scalar<T>::value ||
-                       std::is_same<T,std::basic_string<char>>::value;
-            }
-
-            template <typename W, typename S>
-            bool concat_intern_recursion(W& writter, const S& separator, const char* head) {
-                if (!head) return false;
-                writter << head;
-                return true;
-            }
-
-            template <typename W, typename S, typename T, 
-                typename std::enable_if<is_stream<T>() == true, T>::type* = nullptr>
-            bool concat_intern_recursion(W& writter, const S& separator, const T& head) {
-                if (!head) return false;
-                writter << head.str();
-                return true;
-            }
-
-            template <typename W, typename S, typename T,
-                typename std::enable_if<is_container<T>() == true, T>::type* = nullptr>
-            bool concat_intern_recursion(W& writter, const S& separator, const T& seq) {
-                bool writting = false;
-                auto it = std::begin(seq), et = std::end(seq);
-                while (it != et) {
-                    bool b = concat_intern_recursion(writter, separator, *it);
-                    ++it;
-                    if (!b) continue;
-                    writting = true;
-                    if (it != et) separate(writter, separator);
-                }
-                return writting;
-            }
-
-            template <typename W, typename S, typename T, typename... Args>
-            bool concat_intern_recursion(W& writter, const S& separator, const T& head, const Args&... tail) {            
-                if (concat_intern_recursion(writter, separator, head)) 
-                    separate(writter, separator);
-                return concat_intern_recursion(writter, separator, tail...);
-            }
-
-            template <typename S, typename T, typename... Args,
-                typename std::enable_if<is_writable_stream<T, char>() == true, T>::type* = nullptr>
-            std::basic_string<char> concat_intern(const S& separator, T& writter, const Args&... seq) {
-                concat_intern_recursion(writter, separator, seq...);
-                return concat_to_string(writter);
             }
         }
 
