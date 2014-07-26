@@ -1,0 +1,3 @@
+language: cpp
+compiler: clang
+script: clang test.cpp -std=c++11 -lstdc++ && ./a.out
