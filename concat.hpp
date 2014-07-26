@@ -13,7 +13,6 @@
 #include <sstream>
 #include <deque>
 
-
 namespace theypsilon {
 
     template <typename CharT>
@@ -132,11 +131,17 @@ namespace theypsilon {
             return std::is_scalar<T>::value || is_string<T>();
         }
 
+        template <typename T, template <typename...> class Template>
+        struct is_specialization_of : std::false_type {};
+
+        template <template <typename...> class Template, typename... Args>
+        struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+
         template <typename T>
         constexpr bool is_modifier() {
             return  !is_container    <T>() && !is_stream    <T>() && 
                     !is_char_sequence<T>() && !is_basic_type<T>() &&
-                    !std::is_array<T>::value;
+                    !std::is_array<T>::value && !is_specialization_of<T, std::tuple>::value;
         }
     }
 
@@ -158,6 +163,11 @@ namespace theypsilon {
         template <typename CharT, typename W>
         std::basic_string<CharT> concat_to_string(const W& writter) {
             return writter ? writter.str() : std::basic_string<CharT>();
+        }
+
+        bool any_writable(const std::deque<bool>& b) {
+            for (bool e: b) if (e) return true;
+            return false;
         }
 
         namespace {
@@ -185,6 +195,33 @@ namespace theypsilon {
                 b.push_back(false);
             }
 
+            template <typename... Args>
+            void must_write(std::deque<bool>& b, const std::tuple<Args...>& v);
+
+            template<unsigned N, unsigned Last>
+            struct tuple_checker {
+                template<typename T>
+                static void must(std::deque<bool>& b, const T& v) {
+                    must_write(b, std::get<N>(v));
+                    tuple_checker<N + 1, Last>::template must(b, v);
+                }
+            };
+
+            template<unsigned N>
+            struct tuple_checker<N, N> {
+                template<typename T>
+                static void must(std::deque<bool>& b, const T& v) {
+                    must_write(b, std::get<N>(v));
+                }
+            };
+
+            template <typename... Args>
+            void must_write(std::deque<bool>& b, const std::tuple<Args...>& v) {
+                std::deque<bool> check;
+                tuple_checker<0, sizeof...(Args) - 1>::template must(check, v);
+                b.push_back(any_writable(check));
+            }
+
             template <typename T, typename... Args>
             void must_write(std::deque<bool>& b, const T& head, const Args&... tail) {
                 must_write(b, head);
@@ -196,11 +233,6 @@ namespace theypsilon {
                 std::deque<bool> b;
                 must_write(b, seq...);
                 return b;
-            }
-
-            bool any_writable(const std::deque<bool>& b) {
-                for (bool e: b) if (e) return true;
-                return false;
             }
 
             template <typename CharT, typename W, typename S, typename T>
@@ -233,6 +265,33 @@ namespace theypsilon {
                 for (const auto& element: container) {
                     do_base_write<CharT>(writter, separator, b, element);
                 }
+            }
+
+            template <typename CharT, typename W, typename S, typename... Args>
+            void do_write(W& writter, const S& separator, std::deque<bool>& b, const std::tuple<Args...>& v);
+
+            template<unsigned N, unsigned Last>
+            struct tuple_printer {
+                template<typename CharT, typename W, typename S, typename T>
+                static void print(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
+                    do_base_write<CharT>(writter, separator, b, std::get<N>(v));
+                    tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, b, v);
+                }
+            };
+
+            template<unsigned N>
+            struct tuple_printer<N, N> {
+                template<typename CharT, typename W, typename S, typename T>
+                static void print(W& writter, const S& separator, std::deque<bool>& b, const T& v) {
+                    do_base_write<CharT>(writter, separator, b, std::get<N>(v));
+                }
+            };
+
+            template <typename CharT, typename W, typename S, typename... Args>
+            inline void do_write(W& writter, const S& separator, std::deque<bool>&, const std::tuple<Args...>& v) {
+                std::deque<bool> b;
+                tuple_checker<0, sizeof...(Args) - 1>::template must(b, v);
+                tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, b, v);
             }
 
             template <typename CharT, typename W, typename S, typename T, typename... Args>
@@ -351,7 +410,12 @@ namespace theypsilon {
         typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
+    }
 
+    template <typename T>
+    std::deque<T> ilist(std::initializer_list<T> list) {
+        return list;
+    }
 }
 
 #endif

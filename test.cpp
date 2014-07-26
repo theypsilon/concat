@@ -179,7 +179,6 @@ TEST_CASE( "UTF types, basic concat", "utf_c" ) {
 	REQUIRE( concat<char32_t>(separator(U" "), U"This is", U"Unicode") == U"This is Unicode" );
 }
 
-/*
 TEST_CASE( "initializer typed list, identity", "init_t_id" ) {
 	auto&& 		a = {1,2,3,4,5};
 	const auto& b = {1,2,3,4,5};
@@ -191,7 +190,29 @@ TEST_CASE( "initializer typed list, identity", "init_t_id" ) {
 
 	using inplace = decltype(std::initializer_list<int>{1,2,3,4,5});
 	static_assert(std::is_same<decltype(a), std::initializer_list<int>&&>::value, "");
-	static_assert(std::is_same<decltype(b), const std::initializer_list<int>&>::value, "");
+	//static_assert(std::is_same<decltype(b), const std::initializer_list<int>&>::value, ""); works in clang but fails in gcc
 	static_assert(std::is_same<decltype(c), std::initializer_list<int>>::value, "");
 	static_assert(std::is_same<inplace, std::initializer_list<int>>::value, "");
-}*/
+}
+
+TEST_CASE( "initializer non-inferred list, identity", "init_t_id" ) {
+	REQUIRE( concat(ilist({1,2,3,4,5})) == "12345" );
+	REQUIRE( concat(separator(", "), ilist({1,2,3,4,5})) == "1, 2, 3, 4, 5" );
+}
+
+TEST_CASE( "tuple, identity", "tuple_id" ) {
+	REQUIRE( concat(make_tuple(1,2,3,4,5)) == "12345" );
+	REQUIRE( concat<' '>(make_tuple("hello","world!")) == "hello world!" );
+}
+
+TEST_CASE( "tuple, nested", "tuple_nested" ) {
+	REQUIRE( concat(make_tuple(1,2,3,make_tuple(4,5))) == "12345" );
+	REQUIRE( concat<' '>(make_tuple("hello",make_tuple("world!"))) == "hello world!" );
+	REQUIRE( concat<' '>(make_tuple(make_tuple("hello", "my"),make_tuple("world!"))) == "hello my world!" );
+}
+
+TEST_CASE( "tuple, mixed", "tuple_mixed" ) {
+	REQUIRE( concat(make_tuple(1,2,3,4),5) == "12345" );
+	REQUIRE( concat(make_tuple(1,2,3),make_tuple(4,5)) == "12345" );
+	REQUIRE( concat<' '>(make_tuple("hello","world!"), "goodbye", "friend!") == "hello world! goodbye friend!" );
+}
