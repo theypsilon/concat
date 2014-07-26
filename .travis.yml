@@ -2,6 +2,4 @@ language: cpp
 compiler: 
   - clang
   - gcc
-script: 
-  - clang test.cpp -std=c++11 -lstdc++ && ./a.out
-  - gcc test.cpp -std=c++11 -lstdc++ && ./a.out
+script: clang test.cpp -std=c++11 -lstdc++ && ./a.out
