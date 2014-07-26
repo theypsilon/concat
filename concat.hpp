@@ -34,7 +34,7 @@ namespace theypsilon {
         constexpr char plus [] = " + ";
     };
 
-    namespace { // is_container, is_stream
+    namespace { // is_container, is_stringstream
         template<typename T>
         struct has_const_iterator {
         private:
@@ -68,12 +68,16 @@ namespace theypsilon {
 
         template<typename T, typename CharT>
         constexpr bool is_writable_stream() {
-            return std::is_same<T, std::basic_ostringstream<CharT>>::value || std::is_same<T, std::basic_stringstream<CharT>>::value;
+            return  std::is_same<T, std::basic_ostringstream<CharT>>::value || 
+                    std::is_same<T, std::basic_stringstream <CharT>>::value ||
+                    std::is_same<T, std::basic_ostream<CharT>>::value;
         }
 
         template<typename T, typename CharT = char> 
-        constexpr bool is_stream() {
-            return std::is_same<T, std::basic_istringstream<CharT>>::value || is_writable_stream<T, CharT>();
+        constexpr bool is_stringstream() {
+            return  std::is_same<T, std::basic_istringstream<CharT>>::value || 
+                    std::is_same<T, std::basic_ostringstream<CharT>>::value ||
+                    std::is_same<T, std::basic_stringstream <CharT>>::value;
         }
 
         template<typename T> 
@@ -109,13 +113,13 @@ namespace theypsilon {
                     has_begin_end<T>::beg_value  && 
                     has_begin_end<T>::end_value  &&
                     !std::is_same<T, std::string>::value &&
-                    !is_stream<T>()) 
+                    !is_stringstream<T>()) 
             || (std::is_array<T>::value && !is_char_sequence<T*>());
         }
 
         template<typename T> 
         constexpr bool can_be_false() {
-            return (is_stream<T>() || is_char_sequence<T>()) && !std::is_array<T>::value;
+            return (is_stringstream<T>() || is_char_sequence<T>()) && !std::is_array<T>::value;
         }
 
         template <typename T>
@@ -139,9 +143,10 @@ namespace theypsilon {
 
         template <typename T>
         constexpr bool is_modifier() {
-            return  !is_container    <T>() && !is_stream    <T>() && 
+            return  !is_container    <T>() && !is_stringstream    <T>() && 
                     !is_char_sequence<T>() && !is_basic_type<T>() &&
-                    !std::is_array<T>::value && !is_specialization_of<T, std::tuple>::value;
+                    !std::is_array<T>::value && 
+                    !is_specialization_of<T, std::tuple>::value;
         }
     }
 
@@ -176,13 +181,13 @@ namespace theypsilon {
             }
 
             template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<(!is_container<T>() && !is_stream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
+                typename std::enable_if<(!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
             void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
                 writter << v;
             }
 
             template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<is_stream<T>(), T>::type* = nullptr>
+                typename std::enable_if<is_stringstream<T>(), T>::type* = nullptr>
             void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
                 if (v.good()) writter << concat_to_string<CharT>(v);
                 else writter.setstate(v.rdstate());
@@ -279,7 +284,7 @@ namespace theypsilon {
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
     }
-    
+
 }
 
 #endif
