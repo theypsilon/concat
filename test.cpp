@@ -12,6 +12,11 @@
 using namespace theypsilon;
 using namespace std;
 
+template <typename T>
+std::deque<T> ilist(std::initializer_list<T> list) {
+    return list;
+}
+
 TEST_CASE( "Basic types, identity", "basic_id" ) {
 	CHECK( concat(1)   == "1");
 	CHECK( concat(1.0) == "1");

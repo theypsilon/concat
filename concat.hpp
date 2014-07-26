@@ -279,11 +279,7 @@ namespace theypsilon {
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
     }
-
-    template <typename T>
-    std::deque<T> ilist(std::initializer_list<T> list) {
-        return list;
-    }
+    
 }
 
 #endif
