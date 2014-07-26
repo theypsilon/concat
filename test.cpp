@@ -17,7 +17,7 @@ TEST_CASE( "Basic types, identity", "basic_id" ) {
 	CHECK( concat(1.0) == "1");
 	CHECK( concat('a') == "a");
 	CHECK( concat("a") == "a");
-	CHECK( concat(std::string("a")) == "a");
+	CHECK( concat(string("a")) == "a");
 	CHECK( concat(true) == "1");
 }
 
@@ -28,7 +28,7 @@ TEST_CASE( "Basic types, basic concat", "basic_c" ) {
 	CHECK( concat(1.0,2.0,3.0,4.0,5.0) == "12345" );
 	CHECK( concat('a','a')                           == "aa");
 	CHECK( concat("a","a")                           == "aa");
-	CHECK( concat(std::string("a"),std::string("a")) == "aa");
+	CHECK( concat(string("a"),string("a")) == "aa");
 	CHECK( concat(true, false, true, false) == "1010");
 }
 
@@ -49,17 +49,17 @@ TEST_CASE( "Basic types, mixed", "basic_m" ) {
 }
 
 TEST_CASE( "Pointer types, identity", "pointer_id" ) {
-	std::string temp;
+	string temp;
 	CHECK( concat(static_cast<const char *>(nullptr)) == "");
-	CHECK( concat(static_cast<std::string*>(nullptr)) == "0");
-	CHECK( concat(static_cast<std::string*>(&temp)  ) != "0");
+	CHECK( concat(static_cast<string*>(nullptr)) == "0");
+	CHECK( concat(static_cast<string*>(&temp)  ) != "0");
 	CHECK( concat(static_cast<const void *>(nullptr)) == "0");
 }
 
 TEST_CASE( "Container types, identity", "container_id" ) {
-	CHECK( concat(std::vector<int>{1,2,3,4,5}) == "12345" );
-	CHECK( concat(std::list<int>{1,2,3,4,5}) == "12345" );
-	CHECK( concat(std::set<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(vector<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(list<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(set<int>{1,2,3,4,5}) == "12345" );
 }
 
 TEST_CASE( "Array types, identity", "array" ) {
@@ -68,7 +68,7 @@ TEST_CASE( "Array types, identity", "array" ) {
 }
 
 TEST_CASE( "Container types, mixed", "container_m" ) {
-	std::vector<int> v = {1,2,3,4,5};
+	vector<int> v = {1,2,3,4,5};
 
 	CHECK( concat(1,2,3,4,5,v) == "1234512345" );
 	CHECK( concat(v,1,2,3,4,5) == "1234512345" );
@@ -83,22 +83,22 @@ TEST_CASE( "Container types, mixed", "container_m" ) {
 }
 
 TEST_CASE( "Container types, text identities and separators", "container_s" ) {
-	std::vector<std::string> s = {"hello"," ","world","!"};
+	vector<string> s = {"hello"," ","world","!"};
 	CHECK( concat(s)      == "hello world!" );
 	CHECK( concat<' '>(s) == "hello   world !" );
 
-	std::vector<const char*> c = {"hello"," ","world","!"};
+	vector<const char*> c = {"hello"," ","world","!"};
 	CHECK( concat(c)      == "hello world!" );
 	CHECK( concat<' '>(c) == "hello   world !" );
 
-	std::vector<char> ch = {'a','b','c'};
+	vector<char> ch = {'a','b','c'};
 	CHECK( concat(ch)      == "abc" );
 	CHECK( concat<' '>(ch) == "a b c" );
 }
 
 TEST_CASE( "Stream types, as host", "stream_host" ) {
-	std::string temp;
-	std::ostringstream s1;
+	string temp;
+	ostringstream s1;
 	s1 << "hello";
 	temp = concat<' '>(s1, "world!");
 	CHECK  ( temp == s1.str() );
@@ -107,19 +107,19 @@ TEST_CASE( "Stream types, as host", "stream_host" ) {
 }
 
 TEST_CASE( "Stream types, as guest", "stream_guest" ) {
-	std::string temp;
-	std::ostringstream s1, s2;
+	string temp;
+	ostringstream s1, s2;
 	s1 << "hello";
 	s2 << "world!";
-	temp = concat<' '>(static_cast<const std::ostringstream&>(s1), s2);
+	temp = concat<' '>(static_cast<const ostringstream&>(s1), s2);
 	CHECK( temp     != s1.str() );
 	CHECK( temp     == "hello world!");
 	CHECK( s1.str() == "hello");
 }
 
 TEST_CASE( "Stream types, as host and guest", "stream_hg" ) {
-	std::string temp;
-	std::ostringstream s1, s2;
+	string temp;
+	ostringstream s1, s2;
 	s1 << "hello";
 	s2 << "world!";
 	temp = concat<' '>(s1, s2);
@@ -129,11 +129,11 @@ TEST_CASE( "Stream types, as host and guest", "stream_hg" ) {
 }
 
 TEST_CASE( "Stream types, mixed guest and host", "stream_m" ) {
-	std::vector<std::string> s = {"hello"," ","world","!"};
-	std::vector<const char*> c = {"hello"," ","world","!"};
-	std::vector<char       > h = {'a','b','c'};
+	vector<string> s = {"hello"," ","world","!"};
+	vector<const char*> c = {"hello"," ","world","!"};
+	vector<char       > h = {'a','b','c'};
 
-	std::ostringstream s1, s2;
+	ostringstream s1, s2;
 	s1 << "hello";
 	s2 << "world!";
 	REQUIRE( concat(s1, s, c, h, s2, "amazing") == "hellohello world!hello world!abcworld!amazing");
@@ -141,44 +141,44 @@ TEST_CASE( "Stream types, mixed guest and host", "stream_m" ) {
 }
 
 TEST_CASE( "Stream types, exception", "stream_exception" ) {
-	std::stringstream s1, s2;
-	s1.exceptions(std::ios::failbit | std::ios::eofbit | std::ios::badbit); 
+	stringstream s1, s2;
+	s1.exceptions(ios::failbit | ios::eofbit | ios::badbit); 
 
 	SECTION("failbit") {
-		s2.setstate(std::ios::failbit);
-		CHECK_THROWS_AS( concat(s1,s2), std::ios::failure );
+		s2.setstate(ios::failbit);
+		CHECK_THROWS_AS( concat(s1,s2), ios::failure );
 	}
 
 	SECTION("eofbit") {
-		s2.setstate(std::ios::eofbit);
-		CHECK_THROWS_AS( concat(s1,s2), std::ios::failure );
+		s2.setstate(ios::eofbit);
+		CHECK_THROWS_AS( concat(s1,s2), ios::failure );
 	}
 
 	SECTION("badbit") {
-		s2.setstate(std::ios::badbit);
-		CHECK_THROWS_AS( concat(s1,s2), std::ios::failure );
+		s2.setstate(ios::badbit);
+		CHECK_THROWS_AS( concat(s1,s2), ios::failure );
 	}
 
 	SECTION("not cover") {
-		s1.exceptions(std::ios::failbit);
-		s2.setstate(std::ios::badbit);
+		s1.exceptions(ios::failbit);
+		s2.setstate(ios::badbit);
 		CHECK_NOTHROW( concat(s1,s2) );
 
-		s1.exceptions(std::ios::failbit);
-		s2.setstate(std::ios::eofbit);
+		s1.exceptions(ios::failbit);
+		s2.setstate(ios::eofbit);
 		CHECK_NOTHROW( concat(s1,s2) );
 	}
 
 	SECTION("no throw") {
-		s1.exceptions(std::ios::goodbit);
+		s1.exceptions(ios::goodbit);
 
-		s2.setstate(std::ios::failbit);
+		s2.setstate(ios::failbit);
 		CHECK_NOTHROW( concat(s1,s2) );
 
-		s2.setstate(std::ios::badbit);
+		s2.setstate(ios::badbit);
 		CHECK_NOTHROW( concat(s1,s2) );
 
-		s2.setstate(std::ios::eofbit);
+		s2.setstate(ios::eofbit);
 		CHECK_NOTHROW( concat(s1,s2) );
 	}
 }
@@ -192,14 +192,14 @@ TEST_CASE( "Null text types, mixed", "nulltext" ) {
 }
 
 TEST_CASE( "Null stream types, mixed", "nullstream" ) {
-	std::stringstream s;
+	stringstream s;
 	CHECK( concat("",s) == "");
 	CHECK( concat("this is my message: ", s) == "this is my message: ");
 	CHECK( concat<' '>("", s) == " ");
 }
 
 TEST_CASE( "Modifiers, mixed", "modifiers" ) {
-	CHECK( concat<' '>(std::setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
+	CHECK( concat<' '>(setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
 }
 
 TEST_CASE( "UTF types, identity", "utf_id" ) {
@@ -229,13 +229,13 @@ TEST_CASE( "initializer typed list, identity", "init_t_id" ) {
 	CHECK( concat(a) == "12345" );
 	CHECK( concat(b) == "12345" );
 	CHECK( concat(c) == "12345" );
-	CHECK( concat(std::initializer_list<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(initializer_list<int>{1,2,3,4,5}) == "12345" );
 
-	using inplace = decltype(std::initializer_list<int>{1,2,3,4,5});
-	static_assert(std::is_same<decltype(a), std::initializer_list<int>&&>::value, "");
-	//static_assert(std::is_same<decltype(b), const std::initializer_list<int>&>::value, ""); works in clang but fails in gcc
-	static_assert(std::is_same<decltype(c), std::initializer_list<int>>::value, "");
-	static_assert(std::is_same<inplace, std::initializer_list<int>>::value, "");
+	using inplace = decltype(initializer_list<int>{1,2,3,4,5});
+	static_assert(is_same<decltype(a), initializer_list<int>&&>::value, "");
+	//static_assert(is_same<decltype(b), const initializer_list<int>&>::value, ""); works in clang but fails in gcc
+	static_assert(is_same<decltype(c), initializer_list<int>>::value, "");
+	static_assert(is_same<inplace, initializer_list<int>>::value, "");
 }
 
 TEST_CASE( "initializer non-inferred list, identity", "init_t_id" ) {
