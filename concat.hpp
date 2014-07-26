@@ -12,6 +12,7 @@
 
 #include <sstream>
 #include <deque>
+#include <tuple>
 
 namespace theypsilon {
 
