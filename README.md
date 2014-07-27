@@ -97,7 +97,7 @@ String type conversion between different UTF charsets is not yet implemented, so
 Know more
 ------
 
-If you want to read more about the power of **concat**, ``test.cpp`` is waiting for you :)
+If you want to read more about the power of **concat**, you can learn all you need to know just by reading ``test.cpp``.
 
 Build
 ------
