@@ -33,7 +33,7 @@ You may use separators in two ways:
 It is possible to mix between different parameter types, because under the hood we are using a ``std::ostringstream``.
 
 
-    std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v) << std::endl;
+    std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), '!', v) << std::endl;
     output: "hello world 1 2 3 ! 1 2 3 4 5"
 
 

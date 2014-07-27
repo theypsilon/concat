@@ -275,7 +275,7 @@ TEST_CASE( "README.md", "readme") {
 
 	CHECK( concat<' '>('a','b','c') == "a b c" );
 
-	CHECK( concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v)
+	CHECK( concat<' '>("hello", "world", std::make_tuple(1,2,3), '!', v)
 			== "hello world 1 2 3 ! 1 2 3 4 5" );
 
 	CHECK( concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) == "1.3 0.333" );
