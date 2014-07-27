@@ -267,16 +267,23 @@ TEST_CASE( "tuple, mixed", "tuple_mixed" ) {
 
 TEST_CASE( "README.md", "readme") {
 	CHECK( concat("aa", "bb") == "aabb" );
+
 	std::vector<int> v{1,2,3,4,5};
 	CHECK( concat(v) == "12345" );
+
 	CHECK( concat(separator(" + "), 1,2,3,4,5) == "1 + 2 + 3 + 4 + 5" );
+
 	CHECK( concat<' '>('a','b','c') == "a b c" );
+
 	CHECK( concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v)
 			== "hello world 1 2 3 ! 1 2 3 4 5" );
+
 	CHECK( concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) == "1.3 0.333" );
+
 	std::stringstream s;
 	concat<' '>(s, "it", "just", "works!");
 	CHECK( s.str() == "it just works!" );
+
 	std::ostringstream s1, s2;
 	s2.setstate(std::ios::failbit);
 	const char* error = nullptr;
@@ -287,6 +294,7 @@ TEST_CASE( "README.md", "readme") {
 	    error = e.what();
 	}
 	CHECK( error != nullptr );
+
 	bool assertion = (concat<char16_t>(                u"unicode") == u"unicode") &&
        	             (concat<char32_t>(separator(U""), U"Unicode") == U"Unicode");
 	CHECK(assertion);
