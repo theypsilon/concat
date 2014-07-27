@@ -201,23 +201,23 @@ namespace theypsilon {
         template<unsigned N, unsigned Last>
         struct tuple_printer {
             template<typename CharT, typename W, typename S, typename T>
-            static void print(W& writter, const S& separator, bool b, const T& v) {
+            static void print(W& writter, const S& separator, const T& v) {
                 concat_intern_write<CharT>(writter, separator, true, std::get<N>(v));
-                tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, b, v);
+                tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, v);
             }
         };
 
         template<unsigned N>
         struct tuple_printer<N, N> {
             template<typename CharT, typename W, typename S, typename T>
-            static void print(W& writter, const S& separator, bool, const T& v) {
+            static void print(W& writter, const S& separator, const T& v) {
                 concat_intern_write<CharT>(writter, separator, false, std::get<N>(v));
             }
         };
 
         template <typename CharT, typename W, typename S, typename... Args>
         inline void concat_intern_recursion(W& writter, const S& separator, bool b, const std::tuple<Args...>& v) {
-            tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, b, v);
+            tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, v);
         }
 
         template <typename CharT, typename W, typename S, typename T, typename... Args>
