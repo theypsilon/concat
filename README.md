@@ -1,7 +1,7 @@
 concat.hpp [![Build Status](https://travis-ci.org/theypsilon/concat.svg?branch=master)](https://travis-ci.org/theypsilon/concat)
 ======
 
-Because string concatenation deserves one-liners in C++ too.
+Because string concatenation deserves one-liners in C++11 too.
 
 
     std::cout << concat("aa", "bb") << std::endl;
@@ -9,7 +9,7 @@ Because string concatenation deserves one-liners in C++ too.
     
     
     
-That simple. concat also works with containers and other scalar types.
+That simple. **concat** also works with containers and other scalar types.
 
 
     std::vector<int> v{1,2,3,4,5};
@@ -30,7 +30,7 @@ You may use separators in two ways:
 
 
     
-It is possible to mix between different parameter types, because the under the hood we are using a std::ostringstream.
+It is possible to mix between different parameter types, because the under the hood we are using a ``std::ostringstream``.
 
 
     std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v) << std::endl;
@@ -48,7 +48,7 @@ Yeah, it also accepts tuples (even nested ones). You may also introduce modifier
 
 
     
-And if you want fine-grained control of the underlying std::stringstream, you may also supply it. Just make sure that you pass it as the first parameter (second, if there is also a separator parameter).
+And if you want fine-grained control of the underlying ``std::stringstream``, you may also supply it. Just make sure that you pass it as the first parameter (second, if there is also a separator parameter).
 
 
     std::stringstream s;
@@ -59,9 +59,9 @@ And if you want fine-grained control of the underlying std::stringstream, you ma
 
 
     
-If you supply the std:stringstream as the second or any other parameter, it just gonna be converted to std::string, so you are not writting on it.
+If you supply the std:stringstream as the second or any other parameter, it just gonna be converted to ``std::string``, so you are not writting on it.
 
-Supplying the std::stringstream can be useful.
+Supplying the ``std::stringstream`` can be useful.
 
 
     std::ostringstream s1, s2;
@@ -97,11 +97,13 @@ String type conversion between different UTF charsets is not yet implemented, so
 Know more
 ------
 
-If you want to read more about the power of concat, test.cpp is waiting for you :)
+If you want to read more about the power of **concat**, ``test.cpp`` is waiting for you :)
 
 Build
 ------
-It is just a header file! Just copy it to your include path and maybe rename the namespace to something more convenient than my nickname, and start using it.
+It is just a header file! Just copy ``concat.hpp`` to your include path, maybe rename the namespace to something more convenient than my nickname, and start using it. 
+
+Of course, also make sure your compiler is set to C++11 and that you are linking a standard library implementation in your project, because there is no other dependency. 
 
 ----
 
