@@ -30,7 +30,7 @@ You may use separators in two ways:
 
 
     
-It is possible to mix between different parameter types, because the under the hood we are using a ``std::ostringstream``.
+It is possible to mix between different parameter types, because under the hood we are using a ``std::ostringstream``.
 
 
     std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v) << std::endl;
@@ -42,8 +42,8 @@ It is possible to mix between different parameter types, because the under the h
 Yeah, it also accepts tuples (even nested ones). You may also introduce modifiers.
 
 
-    concat<' '>(setprecision(2), 4.0/3.0, setprecision(3), 1.0/3.0);
-    output: "1.3 0.33"
+    std::cout << concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) << std::endl;
+    output: "1.3 0.333"
 
 
 
@@ -97,7 +97,7 @@ String type conversion between different UTF charsets is not yet implemented, so
 Know more
 ------
 
-If you want to read more about the power of **concat**, ``test.cpp`` is waiting for you :)
+If you want to read more about the power of **concat**, you can learn all you need to know just by reading ``test.cpp``.
 
 Build
 ------
