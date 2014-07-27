@@ -248,31 +248,50 @@ namespace theypsilon {
 
     template <typename CharT = char, typename... Args>
     std::basic_string<CharT> concat(const separator_t<CharT>& sep, Args&&... seq) {
-        return concat_intern<CharT>(sep.sep, std::forward<Args>(seq)...);
+        return concat_intern<CharT>(
+            sep.sep, 
+            std::forward<Args>(seq)...
+        );
     }
 
     template <char head, char... tail, typename F, typename... Args,
         typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(get_separator<char, head, tail...>(), std::forward<F>(first), std::forward<Args>(rest)...);
+        return concat_intern<char>(
+            get_separator<char, head, tail...>(), 
+            std::forward<F>(first), 
+            std::forward<Args>(rest)...
+        );
     }
 
     template <const char* sep, typename F, typename... Args,
         typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
+        return concat_intern<char>(
+            sep, 
+            std::forward<F>(first), 
+            std::forward<Args>(rest)...
+        );
     }
 
     template <typename CharT = char, typename F, typename... Args,
         typename = typename std::enable_if<std::is_same<F, separator_t<CharT>>::value == false, F>::type>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
-        return concat_intern<CharT>((const char*)nullptr, std::forward<F>(first), std::forward<Args>(rest)...);
+        return concat_intern<CharT>(
+            (const char*)nullptr, 
+            std::forward<F>(first), 
+            std::forward<Args>(rest)...
+        );
     }
 
     template <std::ostream& sep (std::ostream&), typename F, typename... Args,
         typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(sep, std::forward<F>(first), std::forward<Args>(rest)...);
+        return concat_intern<char>(
+            sep, 
+            std::forward<F>(first), 
+            std::forward<Args>(rest)...
+        );
     }
 
 }
