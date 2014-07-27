@@ -90,7 +90,9 @@ You can work with unicode, by specifing the char type as template parameter.
     that's true!
     
     
-    
+
+By the way, the only way to specify a separator with UTF parameters is that one.
+
 String type conversion between different UTF charsets is not yet implemented, so when you choose an encoding format, you have to stick to it for all the supplied parameters.
 
 If you want to read more about the power of concat, test.cpp is waiting for you :)
