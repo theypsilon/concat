@@ -165,7 +165,7 @@ namespace theypsilon {
 
         template <typename CharT, typename W, typename S, typename T,
             typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
-        inline void concat_intern_recursion(W& writter, const S& separator, const T* v) {
+        void concat_intern_recursion(W& writter, const S& separator, const T* v) {
             if (v) writter << v;
         }
 
@@ -173,20 +173,20 @@ namespace theypsilon {
             typename std::enable_if<
                 (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), 
                 T>::type* = nullptr>
-        inline void concat_intern_recursion(W& writter, const S& separator, const T& v) {
+        void concat_intern_recursion(W& writter, const S& separator, const T& v) {
             writter << v;
         }
 
         template <typename CharT, typename W, typename S, typename T,
             typename std::enable_if<is_stringstream<T>(), T>::type* = nullptr>
-        inline void concat_intern_recursion(W& writter, const S& separator, const T& v) {
+        void concat_intern_recursion(W& writter, const S& separator, const T& v) {
             if (v.good()) writter << concat_to_string<CharT>(v);
             else writter.setstate(v.rdstate());
         }
 
         template <typename CharT, typename W, typename S, typename T,
             typename std::enable_if<is_container<T>(), T>::type* = nullptr>
-        inline void concat_intern_recursion(W& writter, const S& separator, const T& container) {
+        void concat_intern_recursion(W& writter, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 auto element = *it;
@@ -194,9 +194,6 @@ namespace theypsilon {
                 concat_intern_write<CharT>(writter, separator, it != et, element);
             }
         }
-
-        template <typename CharT, typename W, typename S, typename... Args>
-        void concat_intern_recursion(W&, const S&, const std::tuple<Args...>&);
 
         template<unsigned N, unsigned Last>
         struct tuple_printer {
@@ -216,12 +213,12 @@ namespace theypsilon {
         };
 
         template <typename CharT, typename W, typename S, typename... Args>
-        inline void concat_intern_recursion(W& writter, const S& separator, const std::tuple<Args...>& v) {
+        void concat_intern_recursion(W& writter, const S& separator, const std::tuple<Args...>& v) {
             tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, v);
         }
 
         template <typename CharT, typename W, typename S, typename T, typename... Args>
-        inline void concat_intern_recursion(W& writter, const S& separator, const T& head, const Args&... tail) {
+        void concat_intern_recursion(W& writter, const S& separator, const T& head, const Args&... tail) {
             concat_intern_write<CharT>(writter, separator, true, head);
             concat_intern_recursion<CharT>(writter, separator, tail...);
         }
