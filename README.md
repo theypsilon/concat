@@ -9,7 +9,7 @@ Because string concatenation deserves one-liners in C++ too.
     
     
     
-It also works with containers and other scalar types.
+That simple. concat also works with containers and other scalar types.
 
 
     std::vector<int> v{1,2,3,4,5};
@@ -30,7 +30,7 @@ You may use separators in two ways:
 
 
     
-It is possible to mix between different types, because the under the hood we are using a std::ostringstream.
+It is possible to mix between different parameter types, because the under the hood we are using a std::ostringstream.
 
 
     std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), std::string("!"), v) << std::endl;
@@ -64,8 +64,7 @@ If you supply the std:stringstream as the second or any other parameter, it just
 Supplying the std::stringstream can be useful.
 
 
-    std::ostringstream s1;
-    std::istringstream s2;
+    std::ostringstream s1, s2;
     
     read_file(s2, "test.txt"); // this might cause s2.setstate(std::ios::failbit);
     
@@ -95,4 +94,15 @@ By the way, the only way to specify a separator with UTF parameters is that one.
 
 String type conversion between different UTF charsets is not yet implemented, so when you choose an encoding format, you have to stick to it for all the supplied parameters.
 
+Know more
+------
+
 If you want to read more about the power of concat, test.cpp is waiting for you :)
+
+Build
+------
+It is just a header file! Just copy it to your include path and maybe rename the namespace to something more convenient than my nickname, and start using it.
+
+----
+
+Please **"Star"** the project on GitHub to help it to survive! Thanks!
