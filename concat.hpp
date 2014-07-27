@@ -170,7 +170,9 @@ namespace theypsilon {
         }
 
         template <typename CharT, typename W, typename S, typename T,
-            typename std::enable_if<(!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
+            typename std::enable_if<
+                (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), 
+                T>::type* = nullptr>
         inline void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
             writter << v;
         }
