@@ -163,30 +163,29 @@ namespace theypsilon {
         template <typename CharT, typename W, typename S, typename T>
         void concat_intern_write(W&, const S&, bool, const T&);
 
-        template <typename CharT, typename W, typename S, typename T,
-            typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
-        void concat_intern_recursion(W& writter, const S& separator, const T* v) {
+        template <typename CharT, typename W, typename S, typename T>
+            typename std::enable_if<is_char_sequence<T*>(),
+        void>::type concat_intern_recursion(W& writter, const S& separator, const T* v) {
             if (v) writter << v;
         }
 
-        template <typename CharT, typename W, typename S, typename T,
+        template <typename CharT, typename W, typename S, typename T>
             typename std::enable_if<
-                (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), 
-                T>::type* = nullptr>
-        void concat_intern_recursion(W& writter, const S& separator, const T& v) {
+                (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(),
+        void>::type concat_intern_recursion(W& writter, const S& separator, const T& v) {
             writter << v;
         }
 
-        template <typename CharT, typename W, typename S, typename T,
-            typename std::enable_if<is_stringstream<T>(), T>::type* = nullptr>
-        void concat_intern_recursion(W& writter, const S& separator, const T& v) {
+        template <typename CharT, typename W, typename S, typename T>
+            typename std::enable_if<is_stringstream<T>(),
+        void>::type concat_intern_recursion(W& writter, const S& separator, const T& v) {
             if (v.good()) writter << concat_to_string<CharT>(v);
             else writter.setstate(v.rdstate());
         }
 
-        template <typename CharT, typename W, typename S, typename T,
-            typename std::enable_if<is_container<T>(), T>::type* = nullptr>
-        void concat_intern_recursion(W& writter, const S& separator, const T& container) {
+        template <typename CharT, typename W, typename S, typename T>
+            typename std::enable_if<is_container<T>(),
+        void>::type concat_intern_recursion(W& writter, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 auto element = *it;
@@ -230,7 +229,7 @@ namespace theypsilon {
         }
 
         template <typename CharT, typename S, typename T, typename... Args,
-            typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type* = nullptr>
+            typename = typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type>
         std::basic_string<CharT> concat_intern(const S& separator, T& writter, const Args&... seq) {
             concat_intern_recursion<CharT>(writter, separator, seq...);
             return concat_to_string<CharT>(writter);
