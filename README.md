@@ -42,8 +42,8 @@ It is possible to mix between different parameter types, because under the hood 
 Yeah, it also accepts tuples (even nested ones). You may also introduce modifiers.
 
 
-    concat<' '>(setprecision(2), 4.0/3.0, setprecision(3), 1.0/3.0);
-    output: "1.3 0.33"
+    std::cout << concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) << std::endl;
+    output: "1.3 0.333"
 
 
 
