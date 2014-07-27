@@ -34,7 +34,7 @@ namespace theypsilon {
         constexpr char plus [] = " + ";
     };
 
-    namespace { // is_container, is_stringstream
+    namespace { // type helpers and traits
         template<typename T>
         struct has_const_iterator {
         private:
@@ -81,11 +81,6 @@ namespace theypsilon {
         }
 
         template<typename T> 
-        constexpr bool is_array() {
-            return std::is_array<T>::value;
-        }
-
-        template<typename T> 
         constexpr bool is_char_type() {
             return  std::is_same<typename std::decay<T>::type, char    >::value || 
                     std::is_same<typename std::decay<T>::type, wchar_t >::value || 
@@ -115,11 +110,6 @@ namespace theypsilon {
                     !std::is_same<T, std::string>::value &&
                     !is_stringstream<T>()) 
             || (std::is_array<T>::value && !is_char_sequence<T*>());
-        }
-
-        template<typename T> 
-        constexpr bool can_be_false() {
-            return (is_stringstream<T>() || is_char_sequence<T>()) && !std::is_array<T>::value;
         }
 
         template <typename T>
@@ -170,83 +160,81 @@ namespace theypsilon {
             return writter.good() ? writter.str() : std::basic_string<CharT>();
         }
 
-        namespace {
-            template <typename CharT, typename W, typename S, typename T>
-            void concat_intern_write(W& writter, const S& separator, bool b, const T& v);
+        template <typename CharT, typename W, typename S, typename T>
+        void concat_intern_write(W& writter, const S& separator, bool b, const T& v);
 
-            template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const T* v) {
-                if (v) writter << v;
+        template <typename CharT, typename W, typename S, typename T,
+            typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const T* v) {
+            if (v) writter << v;
+        }
+
+        template <typename CharT, typename W, typename S, typename T,
+            typename std::enable_if<(!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
+            writter << v;
+        }
+
+        template <typename CharT, typename W, typename S, typename T,
+            typename std::enable_if<is_stringstream<T>(), T>::type* = nullptr>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
+            if (v.good()) writter << concat_to_string<CharT>(v);
+            else writter.setstate(v.rdstate());
+        }
+
+        template <typename CharT, typename W, typename S, typename T,
+            typename std::enable_if<is_container<T>(), T>::type* = nullptr>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const T& container) {
+            auto it = std::begin(container), et = std::end(container);
+            while(it != et) {
+                auto element = *it;
+                it++;
+                concat_intern_write<CharT>(writter, separator, it != et, element);
             }
+        }
 
-            template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<(!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(), T>::type* = nullptr>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
-                writter << v;
+        template <typename CharT, typename W, typename S, typename... Args>
+        void concat_intern_recursion(W& writter, const S& separator, bool, const std::tuple<Args...>& v);
+
+        template<unsigned N, unsigned Last>
+        struct tuple_printer {
+            template<typename CharT, typename W, typename S, typename T>
+            static void print(W& writter, const S& separator, bool b, const T& v) {
+                concat_intern_write<CharT>(writter, separator, true, std::get<N>(v));
+                tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, b, v);
             }
+        };
 
-            template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<is_stringstream<T>(), T>::type* = nullptr>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const T& v) {
-                if (v.good()) writter << concat_to_string<CharT>(v);
-                else writter.setstate(v.rdstate());
+        template<unsigned N>
+        struct tuple_printer<N, N> {
+            template<typename CharT, typename W, typename S, typename T>
+            static void print(W& writter, const S& separator, bool, const T& v) {
+                concat_intern_write<CharT>(writter, separator, false, std::get<N>(v));
             }
+        };
 
-            template <typename CharT, typename W, typename S, typename T,
-                typename std::enable_if<is_container<T>(), T>::type* = nullptr>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const T& container) {
-                auto it = std::begin(container), et = std::end(container);
-                while(it != et) {
-                    auto element = *it;
-                    it++;
-                    concat_intern_write<CharT>(writter, separator, it != et, element);
-                }
-            }
+        template <typename CharT, typename W, typename S, typename... Args>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool b, const std::tuple<Args...>& v) {
+            tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, b, v);
+        }
 
-            template <typename CharT, typename W, typename S, typename... Args>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const std::tuple<Args...>& v);
+        template <typename CharT, typename W, typename S, typename T, typename... Args>
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const T& head, const Args&... tail) {
+            concat_intern_write<CharT>(writter, separator, true, head);
+            concat_intern_recursion<CharT>(writter, separator, false, tail...);
+        }
 
-            template<unsigned N, unsigned Last>
-            struct tuple_printer {
-                template<typename CharT, typename W, typename S, typename T>
-                static void print(W& writter, const S& separator, bool b, const T& v) {
-                    concat_intern_write<CharT>(writter, separator, true, std::get<N>(v));
-                    tuple_printer<N + 1, Last>::template print<CharT>(writter, separator, b, v);
-                }
-            };
+        template <typename CharT, typename W, typename S, typename T>
+        inline void concat_intern_write(W& writter, const S& separator, bool b, const T& v) {
+            concat_intern_recursion<CharT>(writter, separator, b, v);
+            if (b && !is_modifier<T>()) separate(writter, separator);
+        }
 
-            template<unsigned N>
-            struct tuple_printer<N, N> {
-                template<typename CharT, typename W, typename S, typename T>
-                static void print(W& writter, const S& separator, bool, const T& v) {
-                    concat_intern_write<CharT>(writter, separator, false, std::get<N>(v));
-                }
-            };
-
-            template <typename CharT, typename W, typename S, typename... Args>
-            inline void concat_intern_recursion(W& writter, const S& separator, bool b, const std::tuple<Args...>& v) {
-                tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, b, v);
-            }
-
-            template <typename CharT, typename W, typename S, typename T, typename... Args>
-            void concat_intern_recursion(W& writter, const S& separator, bool, const T& head, const Args&... tail) {
-                concat_intern_write<CharT>(writter, separator, true, head);
-                concat_intern_recursion<CharT>(writter, separator, false, tail...);
-            }
-
-            template <typename CharT, typename W, typename S, typename T>
-            inline void concat_intern_write(W& writter, const S& separator, bool b, const T& v) {
-                concat_intern_recursion<CharT>(writter, separator, b, v);
-                if (b && !is_modifier<T>()) separate(writter, separator);
-            }
-
-            template <typename CharT, typename S, typename T, typename... Args,
-                typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type* = nullptr>
-            std::basic_string<CharT> concat_intern(const S& separator, T& writter, const Args&... seq) {
-                concat_intern_recursion<CharT>(writter, separator, false, seq...);
-                return concat_to_string<CharT>(writter);
-            }
+        template <typename CharT, typename S, typename T, typename... Args,
+            typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type* = nullptr>
+        std::basic_string<CharT> concat_intern(const S& separator, T& writter, const Args&... seq) {
+            concat_intern_recursion<CharT>(writter, separator, false, seq...);
+            return concat_to_string<CharT>(writter);
         }
 
         template <typename CharT, typename S, typename... Args>
