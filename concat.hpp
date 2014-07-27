@@ -161,7 +161,7 @@ namespace theypsilon {
         }
 
         template <typename CharT, typename W, typename S, typename T>
-        void concat_intern_write(W& writter, const S& separator, bool b, const T& v);
+        void concat_intern_write(W& writter, const S& separator, bool, const T& v);
 
         template <typename CharT, typename W, typename S, typename T,
             typename std::enable_if<is_char_sequence<T*>(), T>::type* = nullptr>
@@ -216,7 +216,7 @@ namespace theypsilon {
         };
 
         template <typename CharT, typename W, typename S, typename... Args>
-        inline void concat_intern_recursion(W& writter, const S& separator, bool b, const std::tuple<Args...>& v) {
+        inline void concat_intern_recursion(W& writter, const S& separator, bool, const std::tuple<Args...>& v) {
             tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writter, separator, v);
         }
 
