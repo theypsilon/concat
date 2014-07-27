@@ -274,16 +274,16 @@ namespace theypsilon {
         typename = typename std::enable_if<std::is_same<F, separator_t<CharT>>::value == false, F>::type>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_intern<CharT>(
-            (const char*)nullptr, 
+            (const CharT*)nullptr,
             std::forward<F>(first), 
             std::forward<Args>(rest)...
         );
     }
 
-    template <std::ostream& sep (std::ostream&), typename F, typename... Args,
-        typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
-    std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(
+    template <std::ostream& sep (std::ostream&), typename CharT = char, typename F, typename... Args,
+        typename = typename std::enable_if<std::is_same<F, separator_t<CharT>>::value == false, F>::type>
+    std::basic_string<CharT> concat(F&& first, Args&&... rest) {
+        return concat_intern<CharT>(
             sep, 
             std::forward<F>(first), 
             std::forward<Args>(rest)...
