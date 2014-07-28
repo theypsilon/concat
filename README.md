@@ -5,7 +5,7 @@ Because string concatenation deserves one-liners in C++11 too.
 
 ```cpp
 std::cout << concat("aa", "bb") << std::endl;
-output: "aabb"
+/* output: "aabb" */
 ```
     
     
@@ -14,7 +14,7 @@ That simple. **concat** also works with containers and other scalar types.
 ```cpp
 std::vector<int> v{1,2,3,4,5};
 std::cout << concat(v) << std::endl;
-output: "12345"
+/* output: "12345" */
 ```
 
     
@@ -22,10 +22,10 @@ You may use separators in two ways:
 
 ```cpp
 std::cout << concat(separator(" + "), 1,2,3,4,5) << std::endl;
-output: "1 + 2 + 3 + 4 + 5"
+/* output: "1 + 2 + 3 + 4 + 5" */
 
 std::cout << concat<' '>('a','b','c') << std::endl;
-output: "a b c"
+/* output: "a b c" */
 ```
 
 
@@ -34,7 +34,7 @@ It is possible to mix between different parameter types, because under the hood 
 
 ```cpp
 std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), '!', v) << std::endl;
-output: "hello world 1 2 3 ! 1 2 3 4 5"
+/* output: "hello world 1 2 3 ! 1 2 3 4 5" */
 ```
 
 
@@ -43,7 +43,7 @@ Yeah, it also accepts tuples (even nested ones). You may also introduce modifier
 
 ```cpp
 std::cout << concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) << std::endl;
-output: "1.3 0.333"
+/* output: "1.3 0.333" */
 ```
 
 
@@ -54,7 +54,7 @@ And if you want fine-grained control of the underlying ``std::stringstream``, yo
 std::stringstream s;
 concat<' '>(s, "it", "just", "works!");
 std::cout << s.str() << endl;
-output: "it just works!"
+/* output: "it just works!" */
 ```
 
 
@@ -75,7 +75,7 @@ try {
     std::cout << e.what() << std::endl;
 }
 
-output could be like this: "ios_base::clear: unspecified iostream_category error"
+/* output could be like this: "ios_base::clear: unspecified iostream_category error" */
 ```
 
 
@@ -86,7 +86,7 @@ You can work with unicode, by specifing the char type as template parameter.
 assert((concat<char16_t>(                u"unicode") == u"unicode") &&
        (concat<char32_t>(separator(U""), U"Unicode") == U"Unicode"));
            
-that's true!
+/* that's true! */
 ```
     
 
