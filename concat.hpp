@@ -94,21 +94,20 @@ namespace theypsilon {
                     is_c_str<T, char32_t>();
         }
 
-        template<typename T> 
-        constexpr bool is_container() {
-            return (has_const_iterator<T>::value && 
-                    has_begin_end     <T>::value && 
-                    !std::is_same<T, std::string>::value &&
-                    !is_stringstream<T>()) 
-            || (std::is_array<T>::value && !is_char_sequence<T*>());
-        }
-
         template <typename T>
         constexpr bool is_string() {
             return  std::is_same<T,std::string   >::value ||
                     std::is_same<T,std::wstring  >::value ||
                     std::is_same<T,std::u16string>::value ||
                     std::is_same<T,std::u32string>::value;
+        }
+
+        template<typename T>
+        constexpr bool is_container() {
+            return (has_const_iterator<T>::value &&
+                    has_begin_end     <T>::value &&
+                    !is_string<T>() && !is_stringstream<T>())
+            || (std::is_array<T>::value && !is_char_sequence<T*>());
         }
 
         template <typename T>
