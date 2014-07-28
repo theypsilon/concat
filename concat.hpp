@@ -59,61 +59,52 @@ namespace theypsilon {
         struct has_begin_end : public decltype(has_begin_end_impl::test<T>(0)) {};
 
         template<typename T, typename CharT>
-        constexpr bool is_writable_stream() {
-            return  std::is_same<T, std::basic_ostringstream<CharT>>::value || 
-                    std::is_same<T, std::basic_stringstream <CharT>>::value ||
-                    std::is_same<T, std::basic_ostream<CharT>>::value;
-        }
-
-        template<typename T, typename CharT = char> 
-        constexpr bool is_stringstream() {
-            return  std::is_same<T, std::basic_istringstream<CharT>>::value || 
-                    std::is_same<T, std::basic_ostringstream<CharT>>::value ||
-                    std::is_same<T, std::basic_stringstream <CharT>>::value;
-        }
-
-        template<typename T> 
-        constexpr bool is_char_type() {
-            return  std::is_same<typename std::decay<T>::type, char    >::value || 
-                    std::is_same<typename std::decay<T>::type, wchar_t >::value || 
-                    std::is_same<typename std::decay<T>::type, char16_t>::value || 
-                    std::is_same<typename std::decay<T>::type ,char32_t>::value;
-        }
+        struct is_writable_stream : std::integral_constant<bool,
+            std::is_same<T, std::basic_ostringstream<CharT>>::value ||
+            std::is_same<T, std::basic_stringstream <CharT>>::value ||
+            std::is_same<T, std::basic_ostream      <CharT>>::value>{};
 
         template<typename T, typename CharT = char>
-        constexpr bool is_c_str() { 
-            return  std::is_same<typename std::decay<T>::type, CharT const *>::value ||
-                    std::is_same<typename std::decay<T>::type, CharT       *>::value;
-        }
+        struct is_stringstream : std::integral_constant<bool,
+            std::is_same<T, std::basic_istringstream<CharT>>::value ||
+            std::is_same<T, std::basic_ostringstream<CharT>>::value ||
+            std::is_same<T, std::basic_stringstream <CharT>>::value>{};
 
         template<typename T> 
-        constexpr bool is_char_sequence() {
-            return  is_c_str<T,     char>() ||
-                    is_c_str<T,  wchar_t>() ||
-                    is_c_str<T, char16_t>() ||
-                    is_c_str<T, char32_t>();
-        }
+        struct is_char_type : std::integral_constant<bool,
+            std::is_same<typename std::decay<T>::type, char    >::value ||
+            std::is_same<typename std::decay<T>::type, wchar_t >::value ||
+            std::is_same<typename std::decay<T>::type, char16_t>::value ||
+            std::is_same<typename std::decay<T>::type ,char32_t>::value>{};
 
-        template <typename T>
-        constexpr bool is_string() {
-            return  std::is_same<T,std::string   >::value ||
-                    std::is_same<T,std::wstring  >::value ||
-                    std::is_same<T,std::u16string>::value ||
-                    std::is_same<T,std::u32string>::value;
-        }
+        template<typename T, typename CharT = char>
+        struct is_c_str : std::integral_constant<bool,
+            std::is_same<typename std::decay<T>::type, CharT const *>::value ||
+            std::is_same<typename std::decay<T>::type, CharT       *>::value>{};
 
         template<typename T>
-        constexpr bool is_container() {
-            return (has_const_iterator<T>::value &&
-                    has_begin_end     <T>::value &&
-                    !is_string<T>() && !is_stringstream<T>())
-            || (std::is_array<T>::value && !is_char_sequence<T*>());
-        }
+        struct is_char_sequence : std::integral_constant<bool,
+            is_c_str<T,     char>::value ||
+            is_c_str<T,  wchar_t>::value ||
+            is_c_str<T, char16_t>::value ||
+            is_c_str<T, char32_t>::value>{};
 
         template <typename T>
-        constexpr bool is_basic_type() {
-            return std::is_scalar<T>::value || is_string<T>();
-        }
+        struct is_string : std::integral_constant<bool,
+            std::is_same<T,std::string   >::value ||
+            std::is_same<T,std::wstring  >::value ||
+            std::is_same<T,std::u16string>::value ||
+            std::is_same<T,std::u32string>::value>{};
+
+        template<typename T>
+        struct is_container : std::integral_constant<bool,
+            (has_const_iterator<T>::value && has_begin_end<T>::value &&
+             !is_string<T>::value && !is_stringstream<T>::value)     ||
+            (std::is_array<T>::value && !is_char_sequence<T*>::value)>{};
+
+        template <typename T>
+        struct is_basic_type : std::integral_constant<bool,
+            std::is_scalar<T>::value || is_string<T>::value>{};
 
         template <typename T, template <typename...> class Template>
         struct is_specialization_of : std::false_type {};
@@ -122,12 +113,14 @@ namespace theypsilon {
         struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
         template <typename T>
-        constexpr bool is_modifier() {
-            return  !is_container    <T>() && !is_stringstream    <T>() && 
-                    !is_char_sequence<T>() && !is_basic_type<T>() &&
-                    !std::is_array<T>::value && 
-                    !is_specialization_of<T, std::tuple>::value;
-        }
+        struct is_modifier : std::integral_constant<bool,
+            !is_container    <T>::value && !is_stringstream<T>::value &&
+            !is_char_sequence<T>::value && !is_basic_type<T>::value &&
+            !std::is_array<T>::value &&
+            !is_specialization_of<T, std::tuple>::value>{};
+
+        template <bool B, class T = void>
+        using enable_if_t = typename std::enable_if<B, T>::type;
     }
 
     namespace { // concat_intern
@@ -154,28 +147,28 @@ namespace theypsilon {
         void concat_intern_write(W&, const S&, bool, const T&);
 
         template <typename CharT, typename W, typename S, typename T>
-            typename std::enable_if<is_char_sequence<T*>(),
-        void>::type concat_intern_recursion(W& writer, const S&, const T* v) {
+            enable_if_t<is_char_sequence<T*>::value,
+        void> concat_intern_recursion(W& writer, const S&, const T* v) {
             if (v) writer << v;
         }
 
         template <typename CharT, typename W, typename S, typename T>
-            typename std::enable_if<
-                (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(),
-        void>::type concat_intern_recursion(W& writer, const S&, const T& v) {
+            enable_if_t<(!is_container<T>::value && !is_stringstream<T>::value &&
+                         !is_char_sequence<T>::value) || is_modifier<T>::value,
+        void> concat_intern_recursion(W& writer, const S&, const T& v) {
             writer << v;
         }
 
         template <typename CharT, typename W, typename S, typename T>
-            typename std::enable_if<is_stringstream<T>(),
-        void>::type concat_intern_recursion(W& writer, const S&, const T& v) {
+            enable_if_t<is_stringstream<T>::value,
+        void> concat_intern_recursion(W& writer, const S&, const T& v) {
             if (v.good()) writer << concat_to_string<CharT>(v);
             else writer.setstate(v.rdstate());
         }
 
         template <typename CharT, typename W, typename S, typename T>
-            typename std::enable_if<is_container<T>(),
-        void>::type concat_intern_recursion(W& writer, const S& separator, const T& container) {
+            enable_if_t<is_container<T>::value,
+        void> concat_intern_recursion(W& writer, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 auto element = *it;
@@ -215,11 +208,11 @@ namespace theypsilon {
         template <typename CharT, typename W, typename S, typename T>
         inline void concat_intern_write(W& writer, const S& separator, bool b, const T& v) {
             concat_intern_recursion<CharT>(writer, separator, v);
-            if (b && !is_modifier<T>()) separate(writer, separator);
+            if (b && !is_modifier<T>::value) separate(writer, separator);
         }
 
         template <typename CharT, typename S, typename T, typename... Args,
-            typename = typename std::enable_if<is_writable_stream<T, CharT>() == true, T>::type>
+            typename = enable_if_t<is_writable_stream<T, CharT>::value == true, T>>
         std::basic_string<CharT> concat_intern(const S& separator, T& writer, const Args&... seq) {
             concat_intern_recursion<CharT>(writer, separator, seq...);
             return concat_to_string<CharT>(writer);
@@ -241,7 +234,7 @@ namespace theypsilon {
     }
 
     template <char head, char... tail, typename F, typename... Args,
-        typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
+        typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(
             get_separator<char, head, tail...>(), 
@@ -251,7 +244,7 @@ namespace theypsilon {
     }
 
     template <const char* sep, typename F, typename... Args,
-        typename = typename std::enable_if<std::is_same<F, separator_t<char>>::value == false, F>::type>
+        typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(
             sep, 
@@ -261,7 +254,7 @@ namespace theypsilon {
     }
 
     template <typename CharT = char, typename F, typename... Args,
-        typename = typename std::enable_if<std::is_same<F, separator_t<CharT>>::value == false, F>::type>
+        typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_intern<CharT>(
             (const CharT*)nullptr,
@@ -271,7 +264,7 @@ namespace theypsilon {
     }
 
     template <std::ostream& sep (std::ostream&), typename CharT = char, typename F, typename... Args,
-        typename = typename std::enable_if<std::is_same<F, separator_t<CharT>>::value == false, F>::type>
+        typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_intern<CharT>(
             sep, 
