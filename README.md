@@ -59,7 +59,7 @@ And if you want fine-grained control of the underlying ``std::stringstream``, yo
 
 
     
-If you supply the std:stringstream as the second or any other parameter, it just gonna be converted to ``std::string``, so you are not writting on it.
+If you supply the std:stringstream as the second or any other parameter, it just gonna be converted to ``std::string``, so you are not writing on it.
 
 Supplying the ``std::stringstream`` can be useful.
 
