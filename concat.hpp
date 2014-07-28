@@ -165,20 +165,20 @@ namespace theypsilon {
 
         template <typename CharT, typename W, typename S, typename T>
             typename std::enable_if<is_char_sequence<T*>(),
-        void>::type concat_intern_recursion(W& writer, const S& separator, const T* v) {
+        void>::type concat_intern_recursion(W& writer, const S&, const T* v) {
             if (v) writer << v;
         }
 
         template <typename CharT, typename W, typename S, typename T>
             typename std::enable_if<
                 (!is_container<T>() && !is_stringstream<T>() && !is_char_sequence<T>()) || is_modifier<T>(),
-        void>::type concat_intern_recursion(W& writer, const S& separator, const T& v) {
+        void>::type concat_intern_recursion(W& writer, const S&, const T& v) {
             writer << v;
         }
 
         template <typename CharT, typename W, typename S, typename T>
             typename std::enable_if<is_stringstream<T>(),
-        void>::type concat_intern_recursion(W& writer, const S& separator, const T& v) {
+        void>::type concat_intern_recursion(W& writer, const S&, const T& v) {
             if (v.good()) writer << concat_to_string<CharT>(v);
             else writer.setstate(v.rdstate());
         }
