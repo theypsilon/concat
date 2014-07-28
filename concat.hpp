@@ -35,36 +35,28 @@ namespace theypsilon {
     };
 
     namespace { // type helpers and traits
+        template<typename...>
+        struct void_ { using type = void; };
+
+        template<typename... Args>
+        using Void = typename void_<Args...>::type;
+
+        template<typename T, typename U = void>
+        struct has_const_iterator : public std::false_type {};
+
         template<typename T>
-        struct has_const_iterator {
-        private:
-            typedef char                      yes;
-            typedef struct { char array[2]; } no;
+        struct has_const_iterator<T, Void<typename T::const_iterator>> : public std::true_type {};
 
-            template<typename C> static yes test(typename C::const_iterator*);
-            template<typename C> static no  test(...);
-        public:
-            static const bool value = sizeof(test<T>(0)) == sizeof(yes);
-            typedef T type;
+        struct has_begin_end_impl {
+            template<typename T, typename B = decltype(std::declval<T&>().begin()),
+                                 typename E = decltype(std::declval<T&>().end())>
+            static std::true_type test(int);
+            template<typename...>
+            static std::false_type test(...);
         };
 
-        template <typename T>
-        struct has_begin_end {
-            template<typename C> static char (&f(typename std::enable_if<
-            std::is_same<decltype(static_cast<typename C::const_iterator (C::*)() const>(&C::begin)),
-            typename C::const_iterator(C::*)() const>::value, void>::type*))[1];
-
-            template<typename C> static char (&f(...))[2];
-
-            template<typename C> static char (&g(typename std::enable_if<
-            std::is_same<decltype(static_cast<typename C::const_iterator (C::*)() const>(&C::end)),
-            typename C::const_iterator(C::*)() const>::value, void>::type*))[1];
-
-            template<typename C> static char (&g(...))[2];
-
-            static bool const beg_value = sizeof(f<T>(0)) == 1;
-            static bool const end_value = sizeof(g<T>(0)) == 1;
-        };
+        template<typename T>
+        struct has_begin_end : public decltype(has_begin_end_impl::test<T>(0)) {};
 
         template<typename T, typename CharT>
         constexpr bool is_writable_stream() {
@@ -105,8 +97,7 @@ namespace theypsilon {
         template<typename T> 
         constexpr bool is_container() {
             return (has_const_iterator<T>::value && 
-                    has_begin_end<T>::beg_value  && 
-                    has_begin_end<T>::end_value  &&
+                    has_begin_end     <T>::value && 
                     !std::is_same<T, std::string>::value &&
                     !is_stringstream<T>()) 
             || (std::is_array<T>::value && !is_char_sequence<T*>());
