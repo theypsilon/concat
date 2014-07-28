@@ -36,10 +36,10 @@ namespace theypsilon {
 
     namespace { // type helpers and traits
         template<typename...>
-        struct void_imp { using type = void; };
+        struct void_impl { using type = void; };
 
         template<typename... Args>
-        using void_t = typename void_imp<Args...>::type;
+        using void_t = typename void_impl<Args...>::type;
 
         template<typename T, typename U = void>
         struct has_const_iterator : public std::false_type {};
