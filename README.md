@@ -101,7 +101,7 @@ Why not just use std::stringstream?
 
 Furthemore there are some tricky things about streams, that can make them feel a little unsafe. I.e.: when you attempt to add a ```(const char*)nullptr``` to a stream, it silently fails (unless you configured exceptions), and following operations with ``<<`` would totally be ignored. This would never happen with **concat** unless you decide to inject your own ``std::stringstream`` as shown above.
 
-Separators, and the function syntax, are also some nice additions that could help to produce a more terse and readable code. It is convenient to remember that in most code we write, we should always think in trading off a little performance penalty for a better readability.
+Separators, and the function syntax, are also some nice additions that could help to produce a more terse and readable code. It is convenient to remember that in most of the code we write, we are not doing performance critical operations, and therefore we should always consider the chance of trading off a little performance penalty for a better readability.
 
 Know more
 ------
