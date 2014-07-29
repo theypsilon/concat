@@ -193,7 +193,7 @@ TEST_CASE( "Null text types, mixed", "nulltext" ) {
 	CHECK( concat<' '>(msg) == "");
 	CHECK( concat<' '>("this is my message: ") == "this is my message: ");
 	CHECK( concat("this is my message: ", msg) == "this is my message: ");
-	CHECK( concat<' '>("this is my message:", msg) == "this is my message: ");
+	CHECK( concat<' '>(msg, "this is my message:") == " this is my message:");
 }
 
 TEST_CASE( "Null stream types, mixed", "nullstream" ) {
@@ -203,7 +203,7 @@ TEST_CASE( "Null stream types, mixed", "nullstream" ) {
 	CHECK( concat<' '>("", s) == " ");
 }
 
-TEST_CASE( "Modifiers, mixed", "modifiers" ) {
+TEST_CASE( "Manipulators, mixed", "manipulators" ) {
 	CHECK( concat<' '>(setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
 }
 
