@@ -1,6 +1,6 @@
 /*
  *  CONCAT 
- *  Version: 2014-07-28
+ *  Version: 2014-07-29
  *  ----------------------------------------------------------
  *  Copyright (c) 2014 José Manuel Barroso Galindo. All rights reserved.
  *
