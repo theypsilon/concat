@@ -1,5 +1,5 @@
 /*
- *  CONCAT 
+ *  CONCAT
  *  Version: 2014-07-29
  *  ----------------------------------------------------------
  *  Copyright (c) 2014 José Manuel Barroso Galindo. All rights reserved.
@@ -13,13 +13,14 @@
 #include <sstream>
 #include <iomanip>
 #include <tuple>
+#include <utility>
 
 namespace theypsilon {
 
     template <typename CharT>
     struct separator_t {
         const CharT* sep;
-        constexpr explicit separator_t(const CharT* s) noexcept: sep{s} {} 
+        constexpr explicit separator_t(const CharT* s) noexcept: sep{s} {}
     };
 
     template <typename CharT>
@@ -195,6 +196,12 @@ namespace theypsilon {
             tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writer, separator, v);
         }
 
+        template <typename CharT, typename W, typename S, typename P1, typename P2>
+        void concat_intern_recursion(W& writer, const S& separator, const std::pair<P1, P2>& v) {
+            concat_intern_write<CharT>(writer, separator, true, v.first);
+            concat_intern_write<CharT>(writer, separator, true, v.second);
+        }
+
         template <typename CharT, typename W, typename S, typename T, typename... Args>
         void concat_intern_recursion(W& writer, const S& separator, const T& head, const Args&... tail) {
             concat_intern_write<CharT>(writer, separator, true, head);
@@ -224,7 +231,7 @@ namespace theypsilon {
     template <typename CharT = char, typename... Args>
     std::basic_string<CharT> concat(const separator_t<CharT>& sep, Args&&... seq) {
         return concat_intern<CharT>(
-            sep.sep, 
+            sep.sep,
             std::forward<Args>(seq)...
         );
     }
@@ -233,8 +240,8 @@ namespace theypsilon {
         typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(
-            get_separator<char, head, tail...>(), 
-            std::forward<F>(first), 
+            get_separator<char, head, tail...>(),
+            std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
@@ -243,8 +250,8 @@ namespace theypsilon {
         typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_intern<char>(
-            sep, 
-            std::forward<F>(first), 
+            sep,
+            std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
@@ -254,7 +261,7 @@ namespace theypsilon {
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_intern<CharT>(
             (const CharT*)nullptr,
-            std::forward<F>(first), 
+            std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
@@ -263,8 +270,8 @@ namespace theypsilon {
         typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_intern<CharT>(
-            sep, 
-            std::forward<F>(first), 
+            sep,
+            std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
