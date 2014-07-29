@@ -39,7 +39,7 @@ std::cout << concat<' '>("hello", "world", std::make_tuple(1,2,3), '!', v) << st
 
 
 
-Yeah, it also accepts tuples (even nested ones). You may also introduce modifiers.
+Yeah, it also accepts tuples (even nested ones). You may also introduce manipulators.
 
 ```cpp
 std::cout << concat<' '>(std::setprecision(2), 4.0/3.0, std::setprecision(3), 1.0/3.0) << std::endl;
