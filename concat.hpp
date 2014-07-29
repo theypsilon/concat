@@ -11,6 +11,7 @@
 #define THEYPSILON_CONCAT
 
 #include <sstream>
+#include <iomanip>
 #include <tuple>
 
 namespace theypsilon {
@@ -35,29 +36,6 @@ namespace theypsilon {
     };
 
     namespace { // type helpers and traits
-        template<typename...>
-        struct void_impl { using type = void; };
-
-        template<typename... Args>
-        using void_t = typename void_impl<Args...>::type;
-
-        template<typename T, typename U = void>
-        struct has_const_iterator : public std::false_type {};
-
-        template<typename T>
-        struct has_const_iterator<T, void_t<typename T::const_iterator>> : public std::true_type {};
-
-        struct has_begin_end_impl {
-            template<typename T, typename B = decltype(std::declval<T&>().begin()),
-                                 typename E = decltype(std::declval<T&>().end())>
-            static std::true_type test(int);
-            template<typename...>
-            static std::false_type test(...);
-        };
-
-        template<typename T>
-        struct has_begin_end : public decltype(has_begin_end_impl::test<T>(0)) {};
-
         template<typename T, typename CharT>
         struct is_writable_stream : std::integral_constant<bool,
             std::is_same<T, std::basic_ostringstream<CharT>>::value ||
@@ -69,13 +47,6 @@ namespace theypsilon {
             std::is_same<T, std::basic_istringstream<CharT>>::value ||
             std::is_same<T, std::basic_ostringstream<CharT>>::value ||
             std::is_same<T, std::basic_stringstream <CharT>>::value>{};
-
-        template<typename T> 
-        struct is_char_type : std::integral_constant<bool,
-            std::is_same<typename std::decay<T>::type, char    >::value ||
-            std::is_same<typename std::decay<T>::type, wchar_t >::value ||
-            std::is_same<typename std::decay<T>::type, char16_t>::value ||
-            std::is_same<typename std::decay<T>::type ,char32_t>::value>{};
 
         template<typename T, typename CharT = char>
         struct is_c_str : std::integral_constant<bool,
@@ -96,28 +67,51 @@ namespace theypsilon {
             std::is_same<T,std::u16string>::value ||
             std::is_same<T,std::u32string>::value>{};
 
-        template<typename T>
-        struct is_container : std::integral_constant<bool,
-            (has_const_iterator<T>::value && has_begin_end<T>::value &&
-             !is_string<T>::value && !is_stringstream<T>::value)     ||
-            (std::is_array<T>::value && !is_char_sequence<T*>::value)>{};
+        struct can_const_begin_end_impl {
+            template<typename T, typename B = decltype(std::begin(std::declval<const T&>())),
+                                 typename E = decltype(std::end  (std::declval<const T&>()))>
+            static std::true_type  test(int);
+            template<typename...>
+            static std::false_type test(...);
+        };
 
-        template <typename T>
-        struct is_basic_type : std::integral_constant<bool,
-            std::is_scalar<T>::value || is_string<T>::value>{};
+        template<typename T>
+        struct can_const_begin_end : public decltype(can_const_begin_end_impl::test<T>(0)) {};
+
+        template<typename T>
+        struct is_iterable : std::integral_constant<bool,
+            can_const_begin_end<T>::value &&
+            !is_string<T>::value && !is_stringstream<T>::value && !is_char_sequence<T*>::value>{};
+
+        struct does_overload_ostream_impl {
+            template<typename T, typename B = decltype(operator<<(std::cout, std::declval<const T&>()))>
+            static std::true_type  test(int);
+            template<typename...>
+            static std::false_type test(...);
+        };
+
+        template<typename T>
+        struct does_overload_ostream : public decltype(does_overload_ostream_impl::test<T>(0)) {};
+
+        template <typename CharT, typename T>
+        struct is_parametrized_manipulator : std::integral_constant<bool,
+            std::is_same<T, decltype(std::setbase      (std::declval<int>()))>::value ||
+            std::is_same<T, decltype(std::setprecision (std::declval<int>()))>::value ||
+            std::is_same<T, decltype(std::setw         (std::declval<int>()))>::value ||
+            std::is_same<T, decltype(std::setfill      (std::declval<CharT>()))>::value ||
+            std::is_same<T, decltype(std::setiosflags  (std::declval<std::ios::fmtflags>()))>::value ||
+            std::is_same<T, decltype(std::resetiosflags(std::declval<std::ios::fmtflags>()))>::value>{};
+
+        template <typename CharT, typename T>
+        struct is_manipulator : std::integral_constant<bool,
+            (std::is_function<T>::value || is_parametrized_manipulator<CharT, T>::value)
+            && does_overload_ostream<T>::value>{};
 
         template <typename T, template <typename...> class Template>
         struct is_specialization_of : std::false_type {};
 
         template <template <typename...> class Template, typename... Args>
         struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
-
-        template <typename T>
-        struct is_modifier : std::integral_constant<bool,
-            !is_container    <T>::value && !is_stringstream<T>::value &&
-            !is_char_sequence<T>::value && !is_basic_type<T>::value &&
-            !std::is_array<T>::value &&
-            !is_specialization_of<T, std::tuple>::value>{};
 
         template <bool B, class T = void>
         using enable_if_t = typename std::enable_if<B, T>::type;
@@ -153,8 +147,8 @@ namespace theypsilon {
         }
 
         template <typename CharT, typename W, typename S, typename T>
-            enable_if_t<(!is_container<T>::value && !is_stringstream<T>::value &&
-                         !is_char_sequence<T>::value) || is_modifier<T>::value,
+            enable_if_t<(!is_iterable<T>::value && !is_stringstream<T>::value &&
+                         !is_char_sequence<T>::value) || is_manipulator<CharT, T>::value,
         void> concat_intern_recursion(W& writer, const S&, const T& v) {
             writer << v;
         }
@@ -167,7 +161,7 @@ namespace theypsilon {
         }
 
         template <typename CharT, typename W, typename S, typename T>
-            enable_if_t<is_container<T>::value,
+            enable_if_t<is_iterable<T>::value,
         void> concat_intern_recursion(W& writer, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
@@ -208,7 +202,7 @@ namespace theypsilon {
         template <typename CharT, typename W, typename S, typename T>
         inline void concat_intern_write(W& writer, const S& separator, bool b, const T& v) {
             concat_intern_recursion<CharT>(writer, separator, v);
-            if (b && !is_modifier<T>::value) separate(writer, separator);
+            if (b && !is_manipulator<CharT, T>::value) separate(writer, separator);
         }
 
         template <typename CharT, typename S, typename T, typename... Args,
