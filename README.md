@@ -94,19 +94,19 @@ By the way, the only way to specify a separator with UTF parameters is that one.
 
 String type conversion between different UTF charsets is not yet implemented, so when you choose an encoding format, you have to stick to it for all the supplied parameters.
 
-Why not just use std::stringstream?
-------
-
-``std::stringstream`` is good enough for many situations, but sometimes I wish it could cover more use cases. Unfortunately with ``std::stringstream`` you can not print **arrays**, **containers**, **tuples** or other **stringstreams** in a uniform and concise manner. 
-
-Furthemore there are some tricky things about streams, that can make them feel a little unsafe. I.e.: when you attempt to add a ```(const char*)nullptr``` to a stream, it silently fails (unless you configured exceptions), and following operations with ``<<`` would totally be ignored. This would never happen with **concat** unless you decide to inject your own ``std::stringstream`` as shown above.
-
-Separators, and the function syntax, are also some nice additions that could help to produce a more terse and readable code. It is convenient to remember that in most of the code we write, we are not doing performance critical operations, and therefore we should always consider the chance of trading off a little performance penalty for a better readability.
-
 Know more
 ------
 
 If you want to read more about the power of **concat**, you can learn all you need to know just by reading ``test.cpp``.
+
+Why not just use std::stringstream?
+------
+
+Of course you can, and I'm sure it is gonna be good enough for many situations. But sometimes I wish it could cover some other common use cases that right now require special (and often tedious) handling. Unfortunately with ``std::stringstream`` you can not print **arrays**, **containers**, **tuples** or other **stringstreams** in a uniform and concise manner. 
+
+Furthemore there are some tricky things about streams, that can make them feel a little unsafe. I.e.: when you attempt to add a ```(const char*)nullptr``` to a stream, it silently fails (unless you configured exceptions), and following operations with ``<<`` would totally be ignored. This would never happen with **concat** unless you decide to inject your own ``std::stringstream`` as shown above.
+
+Separators, and the function syntax, are also some nice additions that could help to produce a more terse and readable code. It is convenient to remember that in most of the code we write, we are not doing performance critical operations, and therefore we should always consider the chance of trading off a little performance penalty for a better readability.
 
 Build
 ------
