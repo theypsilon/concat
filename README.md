@@ -102,7 +102,7 @@ If you want to read more about the power of **concat**, you can learn all you ne
 Why not just use std::stringstream?
 ------
 
-Of course you can, and I'm sure it is gonna be good enough for many situations. But sometimes I wish it could cover some other common use cases that right now require special (and often tedious) handling. Unfortunately with ``std::stringstream`` you can not print **arrays**, **containers**, **tuples** or other **stringstreams** in a uniform and concise manner. 
+Of course you can, and I'm sure it is gonna be good enough for many situations. But sometimes I wish it could cover some other common use cases that right now require special (and often tedious) handling. Unfortunately, with ``std::stringstream`` you can not print **arrays**, **containers**, **tuples** or other **stringstreams** in a uniform and concise manner. 
 
 Furthemore there are some tricky things about streams, that can make them feel a little unsafe. I.e.: when you attempt to add a ```(const char*)nullptr``` to a stream, it silently fails (unless you configured exceptions), and following operations with ``<<`` would totally be ignored. This would never happen with **concat** unless you decide to inject your own ``std::stringstream`` as shown above.
 
