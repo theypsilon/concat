@@ -83,15 +83,17 @@ namespace theypsilon {
             can_const_begin_end<T>::value &&
             !is_string<T>::value && !is_stringstream<T>::value && !is_char_sequence<T*>::value>{};
 
+        template<typename CharT>
         struct does_overload_ostream_impl {
-            template<typename T, typename B = decltype(operator<<(std::cout, std::declval<const T&>()))>
+            template<typename T, typename B = decltype(operator<<( std::declval<std::basic_ostream<CharT>>(),
+                                                                   std::declval<const T&>()               ))>
             static std::true_type  test(int);
             template<typename...>
             static std::false_type test(...);
         };
 
-        template<typename T>
-        struct does_overload_ostream : public decltype(does_overload_ostream_impl::test<T>(0)) {};
+        template<typename CharT, typename T>
+        struct does_overload_ostream : public decltype(does_overload_ostream_impl<CharT>::test<T>(0)) {};
 
         template <typename CharT, typename T>
         struct is_parametrized_manipulator : std::integral_constant<bool,
@@ -105,7 +107,7 @@ namespace theypsilon {
         template <typename CharT, typename T>
         struct is_manipulator : std::integral_constant<bool,
             (std::is_function<T>::value || is_parametrized_manipulator<CharT, T>::value)
-            && does_overload_ostream<T>::value>{};
+            && does_overload_ostream<CharT, T>::value>{};
 
         template <typename T, template <typename...> class Template>
         struct is_specialization_of : std::false_type {};

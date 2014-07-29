@@ -196,18 +196,6 @@ TEST_CASE( "Null text types, mixed", "nulltext" ) {
 	CHECK( concat<' '>(msg, "this is my message:") == " this is my message:");
 }
 
-struct UserDefinedType {
-	friend std::ostream & operator<< (std::ostream &out, UserDefinedType const &t) {
-		out << "UserDefinedType";
-		return out;
-	}
-};
-
-TEST_CASE( "User defined type overload, mixed", "user" ) {
-	CHECK( concat(UserDefinedType()) == "UserDefinedType" );
-	CHECK( concat<' '>("my", UserDefinedType(), "!") == "my UserDefinedType !" );
-}
-
 TEST_CASE( "Null stream types, mixed", "nullstream" ) {
 	stringstream s;
 	CHECK( concat("",s) == "");
@@ -310,4 +298,22 @@ TEST_CASE( "README.md", "readme") {
 	bool assertion = (concat<char16_t>(                u"uni", u"code") == u"unicode") &&
 					 (concat<char32_t>(separator(U""), U"Uni", U"code") == U"Unicode");
 	CHECK(assertion);
+}
+
+template <typename CharT = char>
+struct UserDefinedType {
+	const CharT* text;
+	UserDefinedType(const CharT* text) : text{text} {}
+	friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, UserDefinedType const &t) {
+		out << t.text;
+		return out;
+	}
+};
+
+TEST_CASE( "User defined type overload, mixed", "user" ) {
+	CHECK( concat(UserDefinedType<char>("UserDefinedType")) == "UserDefinedType" );
+	CHECK( concat<' '>("my", UserDefinedType<char>("UserDefinedType"), "!") == "my UserDefinedType !" );
+	CHECK( concat<wchar_t >(UserDefinedType<wchar_t >(L"UserDefinedType")) == L"UserDefinedType" );
+	CHECK( concat<char16_t>(UserDefinedType<char16_t>(u"UserDefinedType")) == u"UserDefinedType" );
+	CHECK( concat<char32_t>(UserDefinedType<char32_t>(U"UserDefinedType")) == U"UserDefinedType" );
 }
