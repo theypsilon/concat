@@ -196,6 +196,18 @@ TEST_CASE( "Null text types, mixed", "nulltext" ) {
 	CHECK( concat<' '>(msg, "this is my message:") == " this is my message:");
 }
 
+struct UserDefinedType {
+	friend std::ostream & operator<< (std::ostream &out, UserDefinedType const &t) {
+		out << "UserDefinedType";
+		return out;
+	}
+};
+
+TEST_CASE( "User defined type overload, mixed", "user" ) {
+	CHECK( concat(UserDefinedType()) == "UserDefinedType" );
+	CHECK( concat<' '>("my", UserDefinedType(), "!") == "my UserDefinedType !" );
+}
+
 TEST_CASE( "Null stream types, mixed", "nullstream" ) {
 	stringstream s;
 	CHECK( concat("",s) == "");
