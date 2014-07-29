@@ -295,7 +295,7 @@ TEST_CASE( "README.md", "readme") {
 	}
 	CHECK( error != nullptr );
 
-	bool assertion = (concat<char16_t>(                u"unicode") == u"unicode") &&
-       	             (concat<char32_t>(separator(U""), U"Unicode") == U"Unicode");
+	bool assertion = (concat<char16_t>(                u"uni", u"code") == u"unicode") &&
+					 (concat<char32_t>(separator(U""), U"Uni", U"code") == U"Unicode");
 	CHECK(assertion);
 }

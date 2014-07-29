@@ -83,8 +83,8 @@ try {
 You can work with unicode, by specifing the char type as template parameter.
 
 ```cpp
-assert((concat<char16_t>(                u"unicode") == u"unicode") &&
-       (concat<char32_t>(separator(U""), U"Unicode") == U"Unicode"));
+assert((concat<char16_t>(                u"uni", u"code") == u"unicode") &&
+       (concat<char32_t>(separator(U""), U"Uni", U"code") == U"Unicode"));
            
 /* that's true! */
 ```
