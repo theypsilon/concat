@@ -2,6 +2,8 @@
 #include "catch.hpp"
 #include "concat.hpp"
 
+#include <array>
+#include <vector>
 #include <list>
 #include <forward_list>
 #include <queue>
