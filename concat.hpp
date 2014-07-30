@@ -181,10 +181,8 @@ namespace theypsilon { // rename this to something that fits your code
         void> concat_impl_write_element(W& writer, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
-                auto element = *it;
-                it++;
-                concat_impl_write_element<CharT>(writer, separator, element);
-                if (it != et) concat_impl_write_separator<CharT, T>(writer, separator);
+                concat_impl_write_element<CharT>(writer, separator, *it);
+                if (++it != et) concat_impl_write_separator<CharT, T>(writer, separator);
             }
         }
 
@@ -297,7 +295,6 @@ namespace theypsilon { // rename this to something that fits your code
             std::forward<Args>(rest)...
         );
     }
-
 }
 
 #endif
