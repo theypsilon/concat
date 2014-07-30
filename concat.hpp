@@ -15,10 +15,10 @@
 #include <tuple>
 #include <utility>
 
-namespace theypsilon {
+namespace theypsilon { // rename this to something that fits your code
 
     template <typename CharT>
-    struct separator_t {
+    struct separator_t { // this class shouldn't be explicitly invoked in client code, use "separator" instead
         const CharT* sep;
         constexpr explicit separator_t(const CharT* s) noexcept: sep{s} {}
     };
@@ -28,7 +28,7 @@ namespace theypsilon {
         return separator_t<CharT>(s);
     }
 
-    namespace sep {
+    namespace sep { // this can be used as an additional way of defining a separator, check 3. entry point
         constexpr char none [] = "";
         constexpr char space[] = " ";
         constexpr char endl [] = "\n";
@@ -120,7 +120,12 @@ namespace theypsilon {
         using enable_if_t = typename std::enable_if<B, T>::type;
     }
 
-    namespace { // concat_intern
+    namespace { // concat_impl : stringstream to string helper, separator handlers, and parameter writer functions
+
+        template <typename CharT, typename W>
+        std::basic_string<CharT> concat_to_string(const W& writer) {
+            return writer.good() ? writer.str() : std::basic_string<CharT>();
+        }
 
         template <typename CharT, char head, char... tail>
         std::basic_string<CharT> get_separator() { return {head, tail...}; }
@@ -135,141 +140,158 @@ namespace theypsilon {
             writer << separator;
         }
 
-        template <typename CharT, typename W>
-        std::basic_string<CharT> concat_to_string(const W& writer) {
-            return writer.good() ? writer.str() : std::basic_string<CharT>();
+        template <typename CharT, typename T, typename W, typename S>
+        void concat_impl_write_separator(W& writer, const S& separator) {
+            if (!is_manipulator<CharT, T>::value) separate(writer, separator);
         }
 
-        template <typename CharT, typename W, typename S, typename T>
-        void concat_intern_write(W&, const S&, bool, const T&);
+        template <typename CharT, typename W, typename S, typename... Args>
+        void concat_impl_write_element(W&, const S&, const std::tuple<Args...>&);
 
-        template <typename CharT, typename W, typename S, typename T>
-            enable_if_t<is_char_sequence<T*>::value,
-        void> concat_intern_recursion(W& writer, const S&, const T* v) {
-            if (v) writer << v;
-        }
+        template <typename CharT, typename W, typename S, typename P1, typename P2>
+        void concat_impl_write_element(W&, const S&, const std::pair<P1, P2>&);
 
+        // we have 6 base cases, depending of the parameter type:
+        // 1. base case any type compatible with << that doesn't require a special handling
         template <typename CharT, typename W, typename S, typename T>
             enable_if_t<(!is_iterable<T>::value && !is_stringstream<T>::value &&
                          !is_char_sequence<T>::value) || is_manipulator<CharT, T>::value,
-        void> concat_intern_recursion(W& writer, const S&, const T& v) {
-            writer << v;
+        void> concat_impl_write_element(W& writer, const S&, const T& element) {
+            writer << element;
         }
 
+        // 2. base case for fundamental built-in string types (const CharT* family, a.k.a. cstrings)
+        template <typename CharT, typename W, typename S, typename T>
+            enable_if_t<is_char_sequence<T*>::value,
+        void> concat_impl_write_element(W& writer, const S&, const T* element) {
+            if (element) writer << element;
+        }
+
+        // 3. base case for std::stringstream types
         template <typename CharT, typename W, typename S, typename T>
             enable_if_t<is_stringstream<T>::value,
-        void> concat_intern_recursion(W& writer, const S&, const T& v) {
-            if (v.good()) writer << concat_to_string<CharT>(v);
-            else writer.setstate(v.rdstate());
+        void> concat_impl_write_element(W& writer, const S&, const T& element) {
+            if (element.good()) writer << concat_to_string<CharT>(element);
+            else writer.setstate(element.rdstate());
         }
 
+        // 4. base case for containers, arrays, and any iterable type EXCEPT the standard string types
         template <typename CharT, typename W, typename S, typename T>
             enable_if_t<is_iterable<T>::value,
-        void> concat_intern_recursion(W& writer, const S& separator, const T& container) {
+        void> concat_impl_write_element(W& writer, const S& separator, const T& container) {
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 auto element = *it;
                 it++;
-                concat_intern_write<CharT>(writer, separator, it != et, element);
+                concat_impl_write_element<CharT>(writer, separator, element);
+                if (it != et) concat_impl_write_separator<CharT, T>(writer, separator);
             }
         }
 
+        // 5. base case for std::tuples
         template<unsigned N, unsigned Last>
         struct tuple_printer {
             template<typename CharT, typename W, typename S, typename T>
-            static void print(W& writer, const S& separator, const T& v) {
-                concat_intern_write<CharT>(writer, separator, true, std::get<N>(v));
-                tuple_printer<N + 1, Last>::template print<CharT>(writer, separator, v);
+            static void print(W& writer, const S& separator, const T& tuple) {
+                concat_impl_write_element<CharT>(writer, separator, std::get<N>(tuple));
+                concat_impl_write_separator<CharT, T>(writer, separator);
+                tuple_printer<N + 1, Last>::template print<CharT>(writer, separator, tuple);
             }
         };
 
         template<unsigned N>
         struct tuple_printer<N, N> {
             template<typename CharT, typename W, typename S, typename T>
-            static void print(W& writer, const S& separator, const T& v) {
-                concat_intern_write<CharT>(writer, separator, false, std::get<N>(v));
+            static void print(W& writer, const S& separator, const T& tuple) {
+                concat_impl_write_element<CharT>(writer, separator, std::get<N>(tuple));
             }
         };
 
         template <typename CharT, typename W, typename S, typename... Args>
-        void concat_intern_recursion(W& writer, const S& separator, const std::tuple<Args...>& v) {
-            tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writer, separator, v);
+        inline void concat_impl_write_element(W& writer, const S& separator, const std::tuple<Args...>& tuple) {
+            tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writer, separator, tuple);
         }
 
+        // 6. base case for std::pairs
         template <typename CharT, typename W, typename S, typename P1, typename P2>
-        void concat_intern_recursion(W& writer, const S& separator, const std::pair<P1, P2>& v) {
-            concat_intern_write<CharT>(writer, separator,  true, v.first);
-            concat_intern_write<CharT>(writer, separator, false, v.second);
+        inline void concat_impl_write_element(W& writer, const S& separator, const std::pair<P1, P2>& pair) {
+            concat_impl_write_element<CharT>(writer, separator, pair.first);
+            concat_impl_write_separator<CharT, std::pair<P1, P2>>(writer, separator);
+            concat_impl_write_element<CharT>(writer, separator, pair.second);
         }
 
+        // the following function is the recursive step that unpacks all the variadic parameters
         template <typename CharT, typename W, typename S, typename T, typename... Args>
-        void concat_intern_recursion(W& writer, const S& separator, const T& head, const Args&... tail) {
-            concat_intern_write<CharT>(writer, separator, true, head);
-            concat_intern_recursion<CharT>(writer, separator, tail...);
+        void concat_impl_write_element(W& writer, const S& separator, const T& head, const Args&... tail) {
+            concat_impl_write_element<CharT>(writer, separator, head);
+            concat_impl_write_separator<CharT, T>(writer, separator);
+            concat_impl_write_element<CharT>(writer, separator, tail...);
         }
 
-        template <typename CharT, typename W, typename S, typename T>
-        inline void concat_intern_write(W& writer, const S& separator, bool b, const T& v) {
-            concat_intern_recursion<CharT>(writer, separator, v);
-            if (b && !is_manipulator<CharT, T>::value) separate(writer, separator);
-        }
-
+        // rearranges the parameters in order to prepare the recursive calls
         template <typename CharT, typename S, typename T, typename... Args,
             typename = enable_if_t<is_writable_stream<T, CharT>::value == true, T>>
-        std::basic_string<CharT> concat_intern(const S& separator, T& writer, const Args&... seq) {
-            concat_intern_recursion<CharT>(writer, separator, seq...);
+        std::basic_string<CharT> concat_impl(const S& separator, T& writer, const Args&... seq) {
+            concat_impl_write_element<CharT>(writer, separator, seq...);
             return concat_to_string<CharT>(writer);
         }
 
+        // when the first parameter is not a stringstream non-const reference, this defines the writer stream
         template <typename CharT, typename S, typename... Args>
-        std::basic_string<CharT> concat_intern(const S& separator, const Args&... seq) {
+        std::basic_string<CharT> concat_impl(const S& separator, const Args&... seq) {
             std::basic_ostringstream<CharT> writer;
-            return concat_intern<CharT>(separator, writer, seq...);
+            return concat_impl<CharT>(separator, writer, seq...);
         }
     }
 
+    // the 5 entry points:
+    // 1. entry point,  when received a separator as first element
     template <typename CharT = char, typename... Args>
     std::basic_string<CharT> concat(const separator_t<CharT>& sep, Args&&... seq) {
-        return concat_intern<CharT>(
+        return concat_impl<CharT>(
             sep.sep,
             std::forward<Args>(seq)...
         );
     }
 
+    // 2. entry point,  when the separator es specified via templated char-pack arguments
     template <char head, char... tail, typename F, typename... Args,
         typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(
+        return concat_impl<char>(
             get_separator<char, head, tail...>(),
             std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
 
+    // 3. entry point, when the separator is a template argument of compile-time defined const char*
     template <const char* sep, typename F, typename... Args,
         typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_intern<char>(
+        return concat_impl<char>(
             sep,
             std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
 
+    // 4. entry point,  when there is no separator.
     template <typename CharT = char, typename F, typename... Args,
         typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
-        return concat_intern<CharT>(
+        return concat_impl<CharT>(
             (const CharT*)nullptr,
             std::forward<F>(first),
             std::forward<Args>(rest)...
         );
     }
 
+    // 5. entry point,  when the separator is std::endl passed as template argument
     template <std::ostream& sep (std::ostream&), typename CharT = char, typename F, typename... Args,
         typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
-        return concat_intern<CharT>(
+        return concat_impl<CharT>(
             sep,
             std::forward<F>(first),
             std::forward<Args>(rest)...
