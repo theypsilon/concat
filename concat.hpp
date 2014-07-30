@@ -228,7 +228,7 @@ namespace theypsilon { // rename this to something that fits your code
 
         // rearranges the parameters in order to prepare the recursive calls
         template <typename CharT, typename S, typename T, typename... Args,
-            typename = enable_if_t<is_writable_stream<T, CharT>::value == true, T>>
+            typename = enable_if_t<is_writable_stream<T, CharT>::value, T>>
         std::basic_string<CharT> concat_impl(const S& separator, T& writer, const Args&... seq) {
             concat_impl_write_element<CharT>(writer, separator, seq...);
             return concat_to_string<CharT>(writer);
@@ -254,7 +254,7 @@ namespace theypsilon { // rename this to something that fits your code
 
     // 2. entry point,  when the separator es specified via templated char-pack arguments
     template <char head, char... tail, typename F, typename... Args,
-        typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
+        typename = enable_if_t<!std::is_same<F, separator_t<char>>::value, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_impl<char>(
             get_separator<char, head, tail...>(),
@@ -265,7 +265,7 @@ namespace theypsilon { // rename this to something that fits your code
 
     // 3. entry point, when the separator is a template argument of compile-time defined const char*
     template <const char* sep, typename F, typename... Args,
-        typename = enable_if_t<std::is_same<F, separator_t<char>>::value == false, F>>
+        typename = enable_if_t<!std::is_same<F, separator_t<char>>::value, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_impl<char>(
             sep,
@@ -276,7 +276,7 @@ namespace theypsilon { // rename this to something that fits your code
 
     // 4. entry point,  when there is no separator.
     template <typename CharT = char, typename F, typename... Args,
-        typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
+        typename = enable_if_t<!std::is_same<F, separator_t<CharT>>::value, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_impl<CharT>(
             (const CharT*)nullptr,
@@ -287,7 +287,7 @@ namespace theypsilon { // rename this to something that fits your code
 
     // 5. entry point,  when the separator is std::endl passed as template argument
     template <std::ostream& sep (std::ostream&), typename CharT = char, typename F, typename... Args,
-        typename = enable_if_t<std::is_same<F, separator_t<CharT>>::value == false, F>>
+        typename = enable_if_t<!std::is_same<F, separator_t<CharT>>::value, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_impl<CharT>(
             sep,
