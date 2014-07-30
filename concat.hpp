@@ -198,8 +198,8 @@ namespace theypsilon {
 
         template <typename CharT, typename W, typename S, typename P1, typename P2>
         void concat_intern_recursion(W& writer, const S& separator, const std::pair<P1, P2>& v) {
-            concat_intern_write<CharT>(writer, separator, true, v.first);
-            concat_intern_write<CharT>(writer, separator, true, v.second);
+            concat_intern_write<CharT>(writer, separator,  true, v.first);
+            concat_intern_write<CharT>(writer, separator, false, v.second);
         }
 
         template <typename CharT, typename W, typename S, typename T, typename... Args>

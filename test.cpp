@@ -278,7 +278,7 @@ TEST_CASE( "pair, nested", "pair_nested" ) {
 
 TEST_CASE( "pair, mixed", "pair_mixed" ) {
 	CHECK( concat(make_pair(1,2),3) == "123" );
-	CHECK( concat(make_pair(1,2),make_pair(4,5)) == "1234" );
+	CHECK( concat(make_pair(1,2),make_pair(3,4)) == "1234" );
 	CHECK( concat<' '>(make_pair("hello","world!"), "goodbye", "friend!") == "hello world! goodbye friend!" );
 }
 
