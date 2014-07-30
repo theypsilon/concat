@@ -265,6 +265,23 @@ TEST_CASE( "tuple, mixed", "tuple_mixed" ) {
 	CHECK( concat<' '>(make_tuple("hello","world!"), "goodbye", "friend!") == "hello world! goodbye friend!" );
 }
 
+TEST_CASE( "pair, identity", "pair_id" ) {
+	CHECK( concat(make_pair(1,2)) == "12" );
+	CHECK( concat<' '>(make_pair("hello","world!")) == "hello world!" );
+}
+
+TEST_CASE( "pair, nested", "pair_nested" ) {
+	CHECK( concat(make_pair(1,make_pair(2,3))) == "123" );
+	CHECK( concat<' '>(make_pair("hello",make_pair("world","!"))) == "hello world !" );
+	CHECK( concat<' '>(make_pair(make_pair("hello", "my"),make_pair("world", "!"))) == "hello my world !" );
+}
+
+TEST_CASE( "pair, mixed", "pair_mixed" ) {
+	CHECK( concat(make_pair(1,2),3) == "123" );
+	CHECK( concat(make_pair(1,2),make_pair(4,5)) == "1234" );
+	CHECK( concat<' '>(make_pair("hello","world!"), "goodbye", "friend!") == "hello world! goodbye friend!" );
+}
+
 TEST_CASE( "README.md", "readme") {
 	CHECK( concat("aa", "bb") == "aabb" );
 
