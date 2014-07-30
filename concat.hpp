@@ -93,7 +93,7 @@ namespace theypsilon {
         };
 
         template<typename CharT, typename T>
-        struct does_overload_ostream : public decltype(does_overload_ostream_impl<CharT>::test<T>(0)) {};
+        struct does_overload_ostream : public decltype(does_overload_ostream_impl<CharT>::template test<T>(0)) {};
 
         template <typename CharT, typename T>
         struct is_parametrized_manipulator : std::integral_constant<bool,
