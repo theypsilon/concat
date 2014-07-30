@@ -3,10 +3,11 @@
 #include "concat.hpp"
 
 #include <list>
+#include <forward_list>
 #include <queue>
+#include <map>
 #include <set>
 #include <unordered_set>
-#include <map>
 #include <unordered_map>
 
 using namespace theypsilon;
@@ -64,7 +65,17 @@ TEST_CASE( "Pointer types, identity", "pointer_id" ) {
 TEST_CASE( "Container types, identity", "container_id" ) {
 	CHECK( concat(vector<int>{1,2,3,4,5}) == "12345" );
 	CHECK( concat(list<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(forward_list<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(deque<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(array<int,5>{1,2,3,4,5}) == "12345" );
 	CHECK( concat(set<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(map<int, int>{{1,2},{3,4},{5,6}}) == "123456" );
+	CHECK( concat(multiset<int>{1,2,3,4,5}) == "12345" );
+	CHECK( concat(multimap<int, int>{{1,2},{3,4},{5,6}}) == "123456" );
+	CHECK( concat(unordered_set<int>{1,2,3,4,5}).size() == 5 );
+	CHECK( concat(unordered_map<int, int>{{1,2},{3,4},{5,6}}).size() == 6 );
+	CHECK( concat(unordered_multiset<int>{1,2,3,4,5}).size() == 5 );
+	CHECK( concat(unordered_multimap<int, int>{{1,2},{3,4},{5,6}}).size() == 6 );
 }
 
 TEST_CASE( "Array types, identity", "array" ) {
@@ -72,7 +83,7 @@ TEST_CASE( "Array types, identity", "array" ) {
 	CHECK( concat(a) == "12345" );
 }
 
-TEST_CASE( "Container types, mixed", "container_m" ) {
+TEST_CASE( "Container type, mixed", "container_m" ) {
 	vector<int> v = {1,2,3,4,5};
 
 	CHECK( concat(1,2,3,4,5,v) == "1234512345" );
