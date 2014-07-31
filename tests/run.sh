@@ -19,3 +19,4 @@ echo "----------------"
 
 $CXX file1.cpp file2.cpp -std=c++11 -lm -lstdc++
 ./a.out
+rm a.out
