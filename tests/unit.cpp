@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
-#include "concat.hpp"
+#include "../concat.hpp"
 
 #include <array>
 #include <vector>

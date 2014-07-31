@@ -9,4 +9,4 @@ before_install:
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 script: 
-  - $CXX --version && $CXX test.cpp -std=c++11 -lm -lstdc++ && ./a.out
+  - tests/script.sh
