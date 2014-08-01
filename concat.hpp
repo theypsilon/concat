@@ -154,8 +154,7 @@ namespace theypsilon { // rename this to something that fits your code
         // we have 6 base cases, depending of the parameter type:
         // 1. base case any type compatible with << that doesn't require a special handling
         template <typename CharT, typename W, typename S, typename T>
-            enable_if_t<(!is_iterable<T>::value && !is_stringstream<T>::value &&
-                         !is_char_sequence<T>::value) || is_manipulator<CharT, T>::value,
+            enable_if_t<!is_iterable<T>::value && !is_stringstream<T>::value,
         void> concat_impl_write_element(W& writer, const S&, const T& element) {
             writer << element;
         }
