@@ -28,14 +28,6 @@ namespace theypsilon { // rename this to something that fits your code
         return separator_t<CharT>(s);
     }
 
-    namespace sep { // this can be used as an additional way of defining a separator, check 3. entry point
-        constexpr char none [] = "";
-        constexpr char space[] = " ";
-        constexpr char endl [] = "\n";
-        constexpr char comma[] = ", ";
-        constexpr char plus [] = " + ";
-    };
-
     namespace { // type helpers and traits
         template<typename T, typename CharT>
         struct is_writable_stream : std::integral_constant<bool,
@@ -241,7 +233,7 @@ namespace theypsilon { // rename this to something that fits your code
         }
     }
 
-    // the 5 entry points:
+    // the 3 entry points:
     // 1. entry point,  when received a separator as first element
     template <typename CharT = char, typename... Args>
     std::basic_string<CharT> concat(const separator_t<CharT>& sep, Args&&... seq) {
@@ -262,34 +254,12 @@ namespace theypsilon { // rename this to something that fits your code
         );
     }
 
-    // 3. entry point, when the separator is a template argument of compile-time defined const char*
-    template <const char* sep, typename F, typename... Args,
-        typename = enable_if_t<!std::is_same<F, separator_t<char>>::value, F>>
-    std::basic_string<char> concat(F&& first, Args&&... rest) {
-        return concat_impl<char>(
-            sep,
-            std::forward<F>(first),
-            std::forward<Args>(rest)...
-        );
-    }
-
-    // 4. entry point,  when there is no separator.
+    // 3. entry point,  when there is no separator.
     template <typename CharT = char, typename F, typename... Args,
         typename = enable_if_t<!std::is_same<F, separator_t<CharT>>::value, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_impl<CharT>(
             (const CharT*)nullptr,
-            std::forward<F>(first),
-            std::forward<Args>(rest)...
-        );
-    }
-
-    // 5. entry point,  when the separator is std::endl passed as template argument
-    template <std::ostream& sep (std::ostream&), typename CharT = char, typename F, typename... Args,
-        typename = enable_if_t<!std::is_same<F, separator_t<CharT>>::value, F>>
-    std::basic_string<CharT> concat(F&& first, Args&&... rest) {
-        return concat_impl<CharT>(
-            sep,
             std::forward<F>(first),
             std::forward<Args>(rest)...
         );

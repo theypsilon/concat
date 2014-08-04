@@ -45,8 +45,7 @@ TEST_CASE( "Basic types, separators", "basic_s" ) {
 	CHECK( concat(separator(", "),1,2,3,4,5)  == "1, 2, 3, 4, 5" );
 	CHECK((concat<',', ' '>(1,2,3,4,5))       == "1, 2, 3, 4, 5" );
 	CHECK( concat<','>(1,2,3,4,5)             == "1,2,3,4,5" );
-	CHECK( concat<endl>(1,2,3,4,5)            == "1\n2\n3\n4\n5" );
-	CHECK( concat<sep::plus>(1,2,3,4,5)       == "1 + 2 + 3 + 4 + 5" );
+	CHECK( concat<'\n'>(1,2,3,4,5)            == "1\n2\n3\n4\n5" );
 	CHECK( concat<' '>("Hello", "World!")     == "Hello World!" );
 }
 
