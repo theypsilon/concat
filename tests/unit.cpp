@@ -229,6 +229,15 @@ TEST_CASE( "Null stream types, mixed", "nullstream" ) {
 
 TEST_CASE( "Manipulators, mixed", "manipulators" ) {
 	CHECK( concat<' '>(setprecision(2), 4.0/3.0, 1, 2) == "1.3 1 2");
+	CHECK( concat<' '>(setbase(16), 10, 16, 8) == "a 10 8");
+	CHECK( concat(setfill('-'), setw(5), 11) == "---11");
+	CHECK( concat(resetiosflags(std::ios::dec),
+		               setiosflags(std::ios::hex
+                                 | std::ios::uppercase
+                                 | std::ios::showbase),42) == "0X2A");
+	stringstream s;
+	s.imbue(locale("en_US.utf8"));
+	CHECK( concat(s, showbase, put_money(1200)) == "$12.00");
 }
 
 TEST_CASE( "UTF types, identity", "utf_id" ) {
