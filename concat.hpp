@@ -17,23 +17,23 @@
 
 namespace theypsilon { // rename this to something that fits your code
 
-	namespace { // separator and delimiter types
-		template <typename CharT>
-		struct separator_t {
-		    const CharT *space;
-		    constexpr explicit separator_t(const CharT* s) noexcept : space{s} {}
-			friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, separator_t const &s) {
-				out << s.space;
-				return out;
-			}
-		};
+    namespace { // separator and delimiter types
+        template <typename CharT>
+	struct separator_t {
+	    const CharT *space;
+            constexpr explicit separator_t(const CharT* s) noexcept : space{s} {}
+	    friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, separator_t const &s) {
+		out << s.space;
+		return out;
+		}
+	};
 
-		template <typename CharT>
-		struct delimiter_t : separator_t<CharT> {
-		    const CharT *left, *right;
-		    constexpr explicit delimiter_t(const CharT* s, const CharT* l, const CharT* r) noexcept
-				: separator_t<CharT>{s}, left{l}, right{r} {}
-		};
+	template <typename CharT>
+	struct delimiter_t : separator_t<CharT> {
+	    const CharT *left, *right;
+	    constexpr explicit delimiter_t(const CharT* s, const CharT* l, const CharT* r) noexcept
+		: separator_t<CharT>{s}, left{l}, right{r} {}
+	};
     }
 
     // separator api, 3 functions
