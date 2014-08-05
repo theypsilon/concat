@@ -215,7 +215,7 @@ namespace theypsilon { // rename this to something that fits your code
         template <typename CharT, typename W, typename S, typename T>
             enable_if_t<is_iterable<T>::value,
         void> concat_impl_write_element(W& writer, const S& separator, const T& container) {
-			open_sequence<CharT>(writer, separator);
+            open_sequence<CharT>(writer, separator);
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 concat_impl_write_element<CharT>(writer, separator, *it);
@@ -245,7 +245,7 @@ namespace theypsilon { // rename this to something that fits your code
 
         template <typename CharT, typename W, typename S, typename... Args>
         inline void concat_impl_write_element(W& writer, const S& separator, const std::tuple<Args...>& tuple) {
-			open_sequence<CharT>(writer, separator);
+            open_sequence<CharT>(writer, separator);
             tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writer, separator, tuple);
             close_sequence<CharT>(writer, separator);
         }
@@ -253,7 +253,7 @@ namespace theypsilon { // rename this to something that fits your code
         // 6. base case for std::pairs
         template <typename CharT, typename W, typename S, typename P1, typename P2>
         inline void concat_impl_write_element(W& writer, const S& separator, const std::pair<P1, P2>& pair) {
-			concat_impl_write_element<CharT>(writer, separator, std::make_tuple(pair.first, pair.second));
+            concat_impl_write_element<CharT>(writer, separator, std::make_tuple(pair.first, pair.second));
         }
 
         // the following function is the recursive step that unpacks all the variadic parameters
@@ -283,7 +283,7 @@ namespace theypsilon { // rename this to something that fits your code
     // the 3 entry points:
     // 1. entry point,  when received a separator as first element
     template <typename CharT = char, typename F, typename... Args>
-		enable_if_t<is_separator<F>::value,
+        enable_if_t<is_separator<F>::value,
     std::basic_string<CharT>> concat(const F& sep, Args&&... seq) {
         return concat_impl<CharT>(
             sep,
