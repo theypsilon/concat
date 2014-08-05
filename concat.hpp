@@ -17,15 +17,39 @@
 
 namespace theypsilon { // rename this to something that fits your code
 
-    template <typename CharT>
-    struct separator_t { // this class shouldn't be explicitly invoked in client code, use "separator" instead
-        const CharT* sep;
-        constexpr explicit separator_t(const CharT* s) noexcept: sep{s} {}
-    };
+	namespace { // separator and delimiter types
+		template <typename CharT>
+		struct separator_t {
+		    const CharT *space;
+		    constexpr explicit separator_t(const CharT* s) noexcept : space{s} {}
+			friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, separator_t const &s) {
+				out << s.space;
+				return out;
+			}
+		};
 
+		template <typename CharT>
+		struct delimiter_t : separator_t<CharT> {
+		    const CharT *left, *right;
+		    constexpr explicit delimiter_t(const CharT* s, const CharT* l, const CharT* r) noexcept
+				: separator_t<CharT>{s}, left{l}, right{r} {}
+		};
+    }
+
+    // separator api, 3 functions
     template <typename CharT>
     constexpr separator_t<CharT> separator(const CharT* s) {
         return separator_t<CharT>(s);
+    }
+
+    template <typename CharT>
+    constexpr delimiter_t<CharT> separator(const CharT* s, const CharT* l, const CharT* r) {
+        return delimiter_t<CharT>(s, l, r);
+    }
+
+    template <typename CharT = char>
+    constexpr delimiter_t<CharT> delimiter(const CharT* s = "", const CharT* l = "(", const CharT* r = ")") {
+        return delimiter_t<CharT>(s, l, r);
     }
 
     namespace { // type helpers and traits
@@ -108,6 +132,11 @@ namespace theypsilon { // rename this to something that fits your code
         template <template <typename...> class Template, typename... Args>
         struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
+        template <typename T>
+        struct is_separator : std::integral_constant<bool,
+            is_specialization_of<T, separator_t>::value ||
+            is_specialization_of<T, delimiter_t>::value>{};
+
         template <bool B, class T = void>
         using enable_if_t = typename std::enable_if<B, T>::type;
     }
@@ -131,6 +160,22 @@ namespace theypsilon { // rename this to something that fits your code
         void separate(W& writer, const S& separator) {
             writer << separator;
         }
+
+        template <typename CharT, typename W>
+        void open_sequence(W& writer, const delimiter_t<CharT>& del) {
+            writer << del.left;
+        }
+
+        template <typename CharT, typename W>
+        void close_sequence(W& writer, const delimiter_t<CharT>& del) {
+            writer << del.right;
+        }
+
+        template <typename CharT, typename W, typename S>
+        void open_sequence(W& writer, const S& del) {}
+
+        template <typename CharT, typename W, typename S>
+        void close_sequence(W& writer, const S& del) {}
 
         template <typename CharT, typename T, typename W, typename S>
         void concat_impl_write_separator(W& writer, const S& separator) {
@@ -170,11 +215,13 @@ namespace theypsilon { // rename this to something that fits your code
         template <typename CharT, typename W, typename S, typename T>
             enable_if_t<is_iterable<T>::value,
         void> concat_impl_write_element(W& writer, const S& separator, const T& container) {
+			open_sequence<CharT>(writer, separator);
             auto it = std::begin(container), et = std::end(container);
             while(it != et) {
                 concat_impl_write_element<CharT>(writer, separator, *it);
                 if (++it != et) concat_impl_write_separator<CharT, T>(writer, separator);
             }
+            close_sequence<CharT>(writer, separator);
         }
 
         // 5. base case for std::tuples
@@ -198,15 +245,15 @@ namespace theypsilon { // rename this to something that fits your code
 
         template <typename CharT, typename W, typename S, typename... Args>
         inline void concat_impl_write_element(W& writer, const S& separator, const std::tuple<Args...>& tuple) {
+			open_sequence<CharT>(writer, separator);
             tuple_printer<0, sizeof...(Args) - 1>::template print<CharT>(writer, separator, tuple);
+            close_sequence<CharT>(writer, separator);
         }
 
         // 6. base case for std::pairs
         template <typename CharT, typename W, typename S, typename P1, typename P2>
         inline void concat_impl_write_element(W& writer, const S& separator, const std::pair<P1, P2>& pair) {
-            concat_impl_write_element<CharT>(writer, separator, pair.first);
-            concat_impl_write_separator<CharT, std::pair<P1, P2>>(writer, separator);
-            concat_impl_write_element<CharT>(writer, separator, pair.second);
+			concat_impl_write_element<CharT>(writer, separator, std::make_tuple(pair.first, pair.second));
         }
 
         // the following function is the recursive step that unpacks all the variadic parameters
@@ -235,17 +282,18 @@ namespace theypsilon { // rename this to something that fits your code
 
     // the 3 entry points:
     // 1. entry point,  when received a separator as first element
-    template <typename CharT = char, typename... Args>
-    std::basic_string<CharT> concat(const separator_t<CharT>& sep, Args&&... seq) {
+    template <typename CharT = char, typename F, typename... Args>
+		enable_if_t<is_separator<F>::value,
+    std::basic_string<CharT>> concat(const F& sep, Args&&... seq) {
         return concat_impl<CharT>(
-            sep.sep,
+            sep,
             std::forward<Args>(seq)...
         );
     }
 
     // 2. entry point,  when the separator es specified via templated char-pack arguments
     template <char head, char... tail, typename F, typename... Args,
-        typename = enable_if_t<!std::is_same<F, separator_t<char>>::value, F>>
+        typename = enable_if_t<!is_separator<F>::value, F>>
     std::basic_string<char> concat(F&& first, Args&&... rest) {
         return concat_impl<char>(
             get_separator<char, head, tail...>(),
@@ -256,7 +304,7 @@ namespace theypsilon { // rename this to something that fits your code
 
     // 3. entry point,  when there is no separator.
     template <typename CharT = char, typename F, typename... Args,
-        typename = enable_if_t<!std::is_same<F, separator_t<CharT>>::value, F>>
+        typename = enable_if_t<!is_separator<F>::value, F>>
     std::basic_string<CharT> concat(F&& first, Args&&... rest) {
         return concat_impl<CharT>(
             (const CharT*)nullptr,

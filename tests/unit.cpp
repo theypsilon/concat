@@ -49,6 +49,18 @@ TEST_CASE( "Basic types, separators", "basic_s" ) {
 	CHECK( concat<' '>("Hello", "World!")     == "Hello World!" );
 }
 
+TEST_CASE( "Basic types, delimiters", "basic_d" ) {
+	CHECK( concat(delimiter(", "),1,2,3,4,5)  == "1, 2, 3, 4, 5" );
+	CHECK((concat<',', ' '>(1,2,3,4,5))       == "1, 2, 3, 4, 5" );
+	CHECK( concat<','>(1,2,3,4,5)             == "1,2,3,4,5" );
+	CHECK( concat<'\n'>(1,2,3,4,5)            == "1\n2\n3\n4\n5" );
+	CHECK( concat<' '>("Hello", "World!")     == "Hello World!" );
+	CHECK( concat(delimiter(", ", "(", ")"), 1, 2, vector<int>{3,4,5}) == "1, 2, (3, 4, 5)" );
+	CHECK( concat(delimiter(), vector<int>{1, 2, 3}) == "(123)" );
+	CHECK( concat(delimiter(), make_tuple(1, 2, 3)) == "(123)" );
+	CHECK( concat(delimiter(), make_pair(1, 2)) == "(12)" );
+}
+
 TEST_CASE( "Basic types, mixed", "basic_m" ) {
 	CHECK( concat(1,"2",3,"4",5,"6") == "123456" );
 	CHECK( concat("1",2,"3",4,"5",6) == "123456" );
