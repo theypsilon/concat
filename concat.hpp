@@ -19,21 +19,21 @@ namespace theypsilon { // rename this to something that fits your code
 
     namespace { // separator and delimiter types
         template <typename CharT>
-	struct separator_t {
-	    const CharT *space;
+        struct separator_t {
+            const CharT *space;
             constexpr explicit separator_t(const CharT* s) noexcept : space{s} {}
-	    friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, separator_t const &s) {
-		out << s.space;
-		return out;
-		}
-	};
+            friend std::basic_ostream<CharT> & operator<< (std::basic_ostream<CharT> &out, separator_t const &s) {
+                out << s.space;
+                return out;
+            }
+        };
 
-	template <typename CharT>
-	struct delimiter_t : separator_t<CharT> {
-	    const CharT *left, *right;
-	    constexpr explicit delimiter_t(const CharT* s, const CharT* l, const CharT* r) noexcept
-		: separator_t<CharT>{s}, left{l}, right{r} {}
-	};
+        template <typename CharT>
+        struct delimiter_t : separator_t<CharT> {
+            const CharT *left, *right;
+            constexpr explicit delimiter_t(const CharT* s, const CharT* l, const CharT* r) noexcept
+                : separator_t<CharT>{s}, left{l}, right{r} {}
+        };
     }
 
     // separator api, 3 functions
@@ -137,6 +137,30 @@ namespace theypsilon { // rename this to something that fits your code
         struct is_separator : std::integral_constant<bool,
             is_specialization_of<T, separator_t>::value ||
             is_specialization_of<T, delimiter_t>::value>{};
+
+        template <bool assert, typename CharT, typename...>
+        struct is_valid_concat_parameter;
+
+        template <bool assert, typename CharT, typename First, typename Second>
+        struct is_valid_concat_parameter<assert, CharT, std::pair<First, Second>> : std::integral_constant<bool,
+            is_valid_concat_parameter<assert, CharT, First >::value &&
+            is_valid_concat_parameter<assert, CharT, Second>::value>{};
+
+        template <bool assert, typename CharT, typename... Args>
+        struct is_valid_concat_parameter<assert, CharT, std::tuple<Args...>> : std::integral_constant<bool,
+            is_valid_concat_parameter<assert, CharT, Args...>::value>{};
+
+        template <bool assert, typename CharT, typename T>
+        struct is_valid_concat_parameter<assert, CharT, T> : std::integral_constant<bool,
+            does_overload_ostream<CharT, T>::value || is_iterable<T>::value>{
+                static_assert(!assert || does_overload_ostream<CharT, T>::value || is_iterable<T>::value,
+                    "Type not supported.");
+            };
+
+        template <bool assert, typename CharT, typename Head, typename... Args>
+        struct is_valid_concat_parameter<assert, CharT, Head, Args...> : std::integral_constant<bool,
+            is_valid_concat_parameter<assert, CharT, Head>::value &&
+            is_valid_concat_parameter<assert, CharT, Args...>::value>{};
 
         template <bool B, class T = void>
         using enable_if_t = typename std::enable_if<B, T>::type;
@@ -266,11 +290,19 @@ namespace theypsilon { // rename this to something that fits your code
         }
 
         // rearranges the parameters in order to prepare the recursive calls
-        template <typename CharT, typename S, typename T, typename... Args,
-            typename = enable_if_t<is_writable_stream<T, CharT>::value, T>>
-        std::basic_string<CharT> concat_impl(const S& separator, T& writer, const Args&... seq) {
+        template <typename CharT, typename S, typename W, typename... Args,
+            enable_if_t<is_writable_stream<W, CharT>::value
+                     && is_valid_concat_parameter<false, CharT, Args...>::value>* = nullptr>
+        std::basic_string<CharT> concat_impl(const S& separator, W& writer, const Args&... seq) {
             concat_impl_write_element<CharT>(writer, separator, seq...);
             return concat_to_string<CharT>(writer);
+        }
+
+        template <typename CharT, typename S, typename W, typename... Args,
+            enable_if_t<is_writable_stream<W, CharT>::value
+                    && !is_valid_concat_parameter<true, CharT, Args...>::value>* = nullptr>
+        std::basic_string<CharT> concat_impl(const S&, W&, const Args&...) {
+            return std::basic_string<CharT>();
         }
 
         // when the first parameter is not a stringstream non-const reference, this defines the writer stream
