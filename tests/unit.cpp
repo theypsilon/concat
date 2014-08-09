@@ -29,7 +29,7 @@ TEST_CASE( "Basic types, identity", "basic_id" ) {
 	CHECK( concat("a") == "a");
 	CHECK( concat(string("a")) == "a");
 	CHECK( concat(true) == "1");
-	//CHECK( concat("", Corazon{}) == ""); Compile error
+	//CHECK( concat("", Corazon{}) == ""); //Compile error
 }
 
 TEST_CASE( "Basic types, basic concat", "basic_c" ) {

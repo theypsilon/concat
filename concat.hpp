@@ -301,9 +301,7 @@ namespace theypsilon { // rename this to something that fits your code
         template <typename CharT, typename S, typename W, typename... Args,
             enable_if_t<is_writable_stream<W, CharT>::value
                     && !is_valid_concat_parameter<true, CharT, Args...>::value>* = nullptr>
-        std::basic_string<CharT> concat_impl(const S&, W&, const Args&...) {
-            return std::basic_string<CharT>();
-        }
+        std::basic_string<CharT> concat_impl(const S&, W&, const Args&...);
 
         // when the first parameter is not a stringstream non-const reference, this defines the writer stream
         template <typename CharT, typename S, typename... Args>
