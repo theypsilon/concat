@@ -20,6 +20,8 @@ std::deque<T> ilist(std::initializer_list<T> list) {
     return list;
 }
 
+struct Corazon{};
+
 TEST_CASE( "Basic types, identity", "basic_id" ) {
 	CHECK( concat(1)   == "1");
 	CHECK( concat(1.0) == "1");
@@ -27,6 +29,7 @@ TEST_CASE( "Basic types, identity", "basic_id" ) {
 	CHECK( concat("a") == "a");
 	CHECK( concat(string("a")) == "a");
 	CHECK( concat(true) == "1");
+	//CHECK( concat("", Corazon{}) == ""); Compile error
 }
 
 TEST_CASE( "Basic types, basic concat", "basic_c" ) {
